@@ -300,7 +300,7 @@ async function renderResponsibilities(){
   const categoryMap=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
 
   // 1) My actual shopping duties
-  const mine=items.filter(x=>x.responsible_member_id===CURRENT_MEMBER.id);
+  const mine=items.filter(x=>x.responsible_member_id===CURRENT_MEMBER.id && !x.purchased);
   if($("#myDutyCount")) $("#myDutyCount").textContent=`${mine.length} ${mine.length===1?"حاجة":"حاجات"}`;
   if($("#myDutyList")){
     $("#myDutyList").innerHTML=mine.length
@@ -391,21 +391,110 @@ async function renderResponsibilities(){
   }
 }
 
+async function renderPurchaseQueue(){
+  const box=$("#purchaseQueue"); if(!box) return;
+
+  const items=DBLIVE?await TripDB.list("shopping_items",{order:"sort_order"}):[];
+  const payerId=IS_ADMIN?($("#purchaseQueuePayer")?.value||CURRENT_MEMBER.id):CURRENT_MEMBER.id;
+  const eligible=items.filter(x=>
+    !x.purchased &&
+    (
+      x.responsible_member_id===payerId ||
+      (IS_ADMIN && !x.responsible_member_id)
+    )
+  );
+
+  if($("#purchaseQueuePayer")){
+    $("#purchaseQueuePayer").innerHTML=memberOptions();
+    $("#purchaseQueuePayer").value=payerId;
+  }
+
+  if($("#purchaseQueueCount")) $("#purchaseQueueCount").textContent=`${eligible.length} جاهزين للتسجيل`;
+
+  box.innerHTML=eligible.length?eligible.map(x=>`
+    <label class="purchase-queue-item">
+      <input type="checkbox" class="purchase-item-check" value="${x.id}">
+      <div>
+        <strong>${x.name}</strong>
+        <small>${x.planned_qty??"—"} ${x.unit||""}${x.responsible_member_id?"":" • غير موزع"}</small>
+      </div>
+      <span>${x.responsible_member_id?foodResponsibleName(x.responsible_member_id):"اختياري"}</span>
+    </label>
+  `).join(""):`<div class="empty-finance">مفيش مشتريات معلّقة على الشخص ده حاليًا ✅</div>`;
+}
+
 async function expenseInit(){
   if(!$("#expenseCategory"))return;
+
   $("#expenseCategory").innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
-  if(IS_ADMIN){ $("#expensePayer").innerHTML=memberOptions(); }
-  else{
+
+  if(IS_ADMIN){
+    $("#expensePayer").innerHTML=memberOptions();
+    if($("#purchaseQueuePayer")){
+      $("#purchaseQueuePayer").innerHTML=memberOptions();
+      $("#purchaseQueuePayer").value=CURRENT_MEMBER.id;
+      $("#purchaseQueuePayer").onchange=renderPurchaseQueue;
+    }
+  }else{
     $("#expensePayer").innerHTML=`<option value="${CURRENT_MEMBER.id}">${CURRENT_MEMBER.name}</option>`;
-    $("#expensePayer").value=CURRENT_MEMBER.id; $("#expensePayer").disabled=true;
+    $("#expensePayer").value=CURRENT_MEMBER.id;
+    $("#expensePayer").disabled=true;
+    if($("#purchaseQueuePayerWrap")) $("#purchaseQueuePayerWrap").style.display="none";
   }
+
   $("#addExpense").onclick=async()=>{
-    let row={category_id:$("#expenseCategory").value,payer_member_id:$("#expensePayer").value,amount:Number($("#expenseAmount").value||0),note:$("#expenseNote").value.trim()};
+    let row={
+      category_id:$("#expenseCategory").value,
+      payer_member_id:$("#expensePayer").value,
+      amount:Number($("#expenseAmount").value||0),
+      note:$("#expenseNote").value.trim()
+    };
     if(!row.amount)return;
-    if(DBLIVE) await TripDB.insert("expenses",row); else{let a=JSON.parse(localStorage.getItem("tripExpenses")||"[]");a.push({...row,id:"l"+Date.now()});localStorage.setItem("tripExpenses",JSON.stringify(a))}
-    $("#expenseAmount").value="";$("#expenseNote").value="";renderExpenses();
-  };renderExpenses();
+    if(DBLIVE) await TripDB.insert("expenses",row);
+    else{
+      let a=JSON.parse(localStorage.getItem("tripExpenses")||"[]");
+      a.push({...row,id:"l"+Date.now()});
+      localStorage.setItem("tripExpenses",JSON.stringify(a));
+    }
+    $("#expenseAmount").value="";
+    $("#expenseNote").value="";
+    await renderExpenses();
+  };
+
+  const addPurchase=$("#recordPurchaseBatch");
+  if(addPurchase){
+    addPurchase.onclick=async()=>{
+      const ids=$$(".purchase-item-check:checked").map(x=>x.value);
+      const amount=Number($("#purchaseBatchAmount").value||0);
+      const note=$("#purchaseBatchNote").value.trim();
+      const payerId=IS_ADMIN?($("#purchaseQueuePayer").value||CURRENT_MEMBER.id):CURRENT_MEMBER.id;
+
+      if(!ids.length){ toast("اختار الحاجات اللي الفاتورة دي بتغطيها"); return; }
+      if(!amount){ toast("اكتب إجمالي الفاتورة"); return; }
+
+      addPurchase.disabled=true;
+      try{
+        await TripDB.recordPurchaseBatch(payerId,ids,amount,note);
+        $("#purchaseBatchAmount").value="";
+        $("#purchaseBatchNote").value="";
+        toast("الفاتورة اتسجلت والمشتريات اتقفلت ✅");
+        await Promise.all([renderPurchaseQueue(),renderExpenses(),renderFood(),renderResponsibilities()]);
+      }catch(e){
+        console.error(e);
+        const msg=String(e.message||e);
+        if(msg.includes("ITEM_ALREADY_PURCHASED")) toast("في صنف منهم متسجل كمشتَرى بالفعل");
+        else if(msg.includes("ITEM_NOT_ASSIGNED_TO_PAYER")) toast("في صنف مش مسؤول عنه الشخص المختار");
+        else toast("حصلت مشكلة في تسجيل الفاتورة");
+      }finally{
+        addPurchase.disabled=false;
+      }
+    };
+  }
+
+  await renderPurchaseQueue();
+  await renderExpenses();
 }
+
 function money(v){
   const n=Number(v||0);
   return new Intl.NumberFormat("ar-EG",{minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:2}).format(n)+" ج";
@@ -437,7 +526,7 @@ function buildTransfers(people){
 
 async function renderExpenses(){
   let b=$("#expenseList");if(!b)return;
-  let arr=DBLIVE?await TripDB.list("expenses",{order:"created_at",asc:false}):JSON.parse(localStorage.getItem("tripExpenses")||"[]");
+  let arr=DBLIVE?await TripDB.list("expenses",{order:"created_at",asc:false,select:"*,expense_shopping_items(shopping_item_id,shopping_items(name))"}):JSON.parse(localStorage.getItem("tripExpenses")||"[]");
   let mn=Object.fromEntries(MEMBERS.map(m=>[m.id,m.name]));
   let cn=Object.fromEntries(CATEGORIES.map(c=>[c.id,c.name]));
 
@@ -450,6 +539,7 @@ async function renderExpenses(){
     <div class="expense-log-meta">
       <span>دفعها: <strong>${mn[x.payer_member_id]||"—"}</strong></span>
       <span class="muted">${x.note||"بدون ملاحظة"}</span>
+      ${x.expense_shopping_items?.length?`<span class="expense-linked-items">🛒 ${x.expense_shopping_items.map(l=>l.shopping_items?.name).filter(Boolean).join("، ")}</span>`:""}
     </div>
     ${(IS_ADMIN||x.payer_member_id===CURRENT_MEMBER.id)?`<button class="btn danger expense-del compact" data-id="${x.id}">حذف</button>`:""}
   </article>`).join(""):`<div class="empty-finance">لسه مفيش مصاريف مسجلة.</div>`;
@@ -827,6 +917,68 @@ async function renderRecentChanges(){
   }).join(""):`<div class="muted">لسه مفيش تعديلات.</div>`;
 }
 
+
+function initMobileMenu(){
+  const nav=document.querySelector(".nav");
+  const links=document.querySelector(".links");
+  if(!nav || !links || document.getElementById("mobileMenuToggle")) return;
+
+  const toggle=document.createElement("button");
+  toggle.id="mobileMenuToggle";
+  toggle.className="mobile-menu-toggle";
+  toggle.setAttribute("aria-label","فتح القائمة");
+  toggle.innerHTML="<span></span><span></span><span></span>";
+  nav.appendChild(toggle);
+
+  const backdrop=document.createElement("div");
+  backdrop.id="mobileMenuBackdrop";
+  backdrop.className="mobile-menu-backdrop";
+
+  const drawer=document.createElement("aside");
+  drawer.id="mobileMenuDrawer";
+  drawer.className="mobile-menu-drawer";
+  drawer.innerHTML=`
+    <div class="mobile-drawer-head">
+      <div>
+        <small>إنت داخل باسم</small>
+        <strong id="drawerUserName">${CURRENT_MEMBER?.name||""}${IS_ADMIN?" 👑":""}</strong>
+      </div>
+      <button id="closeMobileMenu" class="mobile-drawer-close">×</button>
+    </div>
+    <nav class="mobile-drawer-links">
+      ${links.innerHTML}
+    </nav>
+    <div class="mobile-drawer-actions">
+      <button id="drawerSwitchMember" class="btn secondary">⇄ تغيير العضو</button>
+      <button id="drawerInstallApp" class="btn">📲 نزّل التطبيق</button>
+    </div>
+  `;
+
+  document.body.append(backdrop,drawer);
+
+  const open=()=>{
+    drawer.classList.add("open");
+    backdrop.classList.add("open");
+    document.body.classList.add("menu-open");
+  };
+  const close=()=>{
+    drawer.classList.remove("open");
+    backdrop.classList.remove("open");
+    document.body.classList.remove("menu-open");
+  };
+
+  toggle.onclick=open;
+  backdrop.onclick=close;
+  drawer.querySelector("#closeMobileMenu").onclick=close;
+  drawer.querySelectorAll("a").forEach(a=>a.onclick=close);
+  drawer.querySelector("#drawerSwitchMember").onclick=()=>TripDB.forgetDevice();
+  drawer.querySelector("#drawerInstallApp").onclick=()=>{
+    close();
+    if(window.AshqeyaInstall?.install) window.AshqeyaInstall.install();
+  };
+}
+
+
 function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 15px;background:#071824;border:1px solid rgba(255,255,255,.15);border-radius:999px;z-index:100";document.body.appendChild(e)}e.textContent=t;e.style.display="block";clearTimeout(window._tt);window._tt=setTimeout(()=>e.style.display="none",1800)}
 
 document.addEventListener("DOMContentLoaded",async()=>{
@@ -842,14 +994,14 @@ document.addEventListener("DOMContentLoaded",async()=>{
   let m=TripDB.getMember(); CURRENT_MEMBER=m; IS_ADMIN=TripDB.isAdmin();
   let bar=$("#userBar");
   if(bar){
-    bar.innerHTML=`<span class="member-chip">👤 ${m.name}${IS_ADMIN?" 👑":""}</span><button id="switchMember" class="btn secondary">تغيير العضو</button>`;
+    bar.innerHTML=`<span class="member-chip current-user-chip">👤 ${m.name}${IS_ADMIN?" 👑":""}</span><button id="switchMember" class="btn secondary">تغيير العضو</button>`;
     $("#switchMember").onclick=()=>TripDB.forgetDevice();
   }
 
   await loadCore();
   renderParticipantCount();
   await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities(),renderFoodResponsibilities()]);
-  foodAddInit();expenseInit();ideasInit();privateBagInit();
+  initMobileMenu(); foodAddInit();expenseInit();ideasInit();privateBagInit();
   await renderRecentChanges(); await renderAdminPanel();
 
   if(DBLIVE){

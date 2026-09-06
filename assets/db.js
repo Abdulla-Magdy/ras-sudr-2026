@@ -156,6 +156,19 @@ window.TripDB = (() => {
     return data;
   }
 
+
+  async function recordPurchaseBatch(payerMemberId,itemIds,amount,note=""){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("record_purchase_batch",{
+      p_payer_member_id:payerMemberId,
+      p_item_ids:itemIds,
+      p_amount:Number(amount),
+      p_note:note||null
+    });
+    if(error) throw error;
+    return data;
+  }
+
   async function recentChanges(limit=12){
     if(!member) return [];
     const {data,error}=await client.from("change_log")
@@ -174,6 +187,6 @@ window.TripDB = (() => {
   return {
     init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminResetRequests,
     forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
-    upsertResponsibility,claimFoodItem,releaseFoodItem,recentChanges,subscribe
+    upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,recentChanges,subscribe
   };
 })();

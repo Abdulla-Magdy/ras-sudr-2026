@@ -2,9 +2,46 @@
 <a href="index.html" data-page="index.html"><span class="nav-icon">🏠</span><span class="nav-label">الرئيسية</span></a><a href="food.html" data-page="food.html"><span class="nav-icon">🍳</span><span class="nav-label">الأكل</span></a><a href="responsibilities.html" data-page="responsibilities.html"><span class="nav-icon">📋</span><span class="nav-label">عليه إيه؟</span></a><a href="expenses.html" data-page="expenses.html"><span class="nav-icon">💰</span><span class="nav-label">مصاريف</span></a><a href="crew.html" data-page="crew.html"><span class="nav-icon">😎</span><span class="nav-label">الأشقياء</span></a><a href="bag.html" data-page="bag.html"><span class="nav-icon">🎒</span><span class="nav-label">شنطتي</span></a><a href="ideas.html" data-page="ideas.html"><span class="nav-icon">💡</span><span class="nav-label">اقتراحات</span></a>
 </nav><button id="installAppBtn" class="install-app-btn">📲 نزّل التطبيق</button><span id="dbState" class="db-state">Shared Live</span><span id="userBar"></span></div></header>
 <main class="shell"><section class="hero"><div class="eyebrow">MONEY TALKS</div><h1>المصاريف</h1><div class="subtitle">سجّل كل دفعة، والتقرير يحسب تلقائيًا نصيب كل واحد ومين له ومين عليه.</div></section>
+
+<section class="section">
+  <div class="card purchase-batch-card">
+    <div class="section-title">
+      <div>
+        <span class="pill">SMART PURCHASE</span>
+        <h2 style="margin-top:8px">مشتريات جاهزة للحساب</h2>
+      </div>
+      <small id="purchaseQueueCount">0 جاهزين للتسجيل</small>
+    </div>
+    <div class="notice">
+      لو اشتريت كذا حاجة في فاتورة واحدة، اختارهم كلهم واكتب <strong>إجمالي الفاتورة مرة واحدة</strong>.
+      مش محتاج تدخل سعر كل صنف.
+    </div>
+
+    <div id="purchaseQueuePayerWrap" class="purchase-payer-wrap">
+      <label class="mini-field">
+        <span>الفاتورة باسم مين؟</span>
+        <select id="purchaseQueuePayer" class="select-input"></select>
+      </label>
+    </div>
+
+    <div id="purchaseQueue" class="purchase-queue"></div>
+
+    <div class="purchase-batch-footer">
+      <label class="mini-field">
+        <span>إجمالي الفاتورة</span>
+        <input id="purchaseBatchAmount" class="amount-input" type="number" inputmode="decimal" placeholder="0">
+      </label>
+      <label class="mini-field purchase-note">
+        <span>ملاحظة اختيارية</span>
+        <input id="purchaseBatchNote" class="text-input" placeholder="مثال: سوبرماركت — عيش + جبنة + خضار">
+      </label>
+      <button id="recordPurchaseBatch" class="btn">✓ سجّل الفاتورة واقفل المشتريات</button>
+    </div>
+  </div>
+</section>
 <section class="section">
   <div class="card expense-entry-card">
-    <div class="section-title"><h2>سجّل دفعة</h2><small>التقرير بيتحدث فورًا</small></div>
+    <div class="section-title"><h2>دفعة عامة</h2><small>بنزين، شاليه، بوابات، أو أي مصروف مش مربوط بصنف</small></div>
     <div class="expense-form-grid">
       <label class="mini-field"><span>البند</span><select id="expenseCategory" class="select-input"></select></label>
       <label class="mini-field"><span>مين دفع؟</span><select id="expensePayer" class="select-input"></select></label>

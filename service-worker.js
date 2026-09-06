@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v11";
+const CACHE_NAME = "ras-sudr-baz-v12";
 const CORE = [
   "./",
   "./index.html",
