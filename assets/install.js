@@ -16,6 +16,8 @@ window.AshqeyaInstall = (() => {
     if(isStandalone()) {
       btn.style.display="none";
       const card=document.getElementById("firstInstallCard"); if(card) card.style.display="none";
+      const gate=document.getElementById("installRequiredGate"); if(gate) gate.style.display="none";
+      const loginSection=document.getElementById("loginAccessSection"); if(loginSection) loginSection.style.display="block";
       return;
     }
     btn.style.display="inline-flex";
@@ -70,6 +72,8 @@ window.AshqeyaInstall = (() => {
     });
     const btn=getBtn();
     if(btn) btn.onclick=install;
+    const requiredBtn=document.getElementById("installRequiredBtn");
+    if(requiredBtn) requiredBtn.onclick=install;
 
     if("serviceWorker" in navigator){
       navigator.serviceWorker.register("./service-worker.js").catch(console.warn);

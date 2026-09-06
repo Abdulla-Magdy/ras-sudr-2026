@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>دخول الأشقياء — Ras Sudr</title><link rel="stylesheet" href="assets/style.css?v=13">
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="البز في الرحلة"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"></head><body>
+<title>دخول الأشقياء — Ras Sudr</title><link rel="stylesheet" href="assets/style.css?v=14">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="البز في الرحلة"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><script src="assets/pwa-gate.js?v=14"></script></head><body>
 <main class="shell" style="max-width:720px;padding-top:55px">
   <section class="hero">
     <div class="eyebrow">AL ASHQEYA ACCESS 😎</div>
@@ -17,8 +17,23 @@
       <button id="installAppBtn" class="install-app-btn first-install-btn">📲 نزّل التطبيق</button>
     </div>
   </section>
+<section id="installRequiredGate" class="install-required-gate">
+  <div class="install-required-card">
+    <img src="assets/icons/app-icon-large.png" alt="البز في الرحلة" class="install-required-icon">
+    <span class="pill">MOBILE APP ONLY</span>
+    <h2>نزّل «البز في الرحلة» الأول 📲</h2>
+    <p>علشان تدخل من الموبايل لازم تضيف التطبيق على الشاشة الرئيسية. بعد التثبيت افتحه من الأيقونة، وساعتها هيظهر اختيار الاسم والـPIN.</p>
+    <button id="installRequiredBtn" class="btn install-required-btn">📲 نزّل التطبيق دلوقتي</button>
+    <div class="install-required-tip">
+      <strong>iPhone؟</strong>
+      افتح الصفحة في Safari واضغط Share ثم <b>Add to Home Screen</b>.
+    </div>
+    <small>من الكمبيوتر تقدر تدخل عادي من المتصفح.</small>
+  </div>
+</section>
 
-  <section class="section"><div class="card">
+
+  <section id="loginAccessSection" class="section"><div class="card">
     <label class="muted">مين إنت؟</label>
     <select id="memberSelect" class="select-input" style="margin-top:7px">
       <option value="">اختار اسمك...</option>
@@ -43,8 +58,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-config.js?v=13"></script>
-<script src="assets/db.js?v=13"></script>
+<script src="assets/supabase-config.js?v=14"></script>
+<script src="assets/db.js?v=14"></script>
 <script>
 let choices=[];
 const $=s=>document.querySelector(s);
@@ -117,4 +132,4 @@ function pin4(v){ return /^\d{4}$/.test(v); }
     message("محتاجين نكمل إعداد Supabase الأول: "+(e.message||e),true);
   }
 })();
-</script><script src="assets/install.js?v=13"></script></body></html>
+</script><script src="assets/install.js?v=14"></script></body></html>
