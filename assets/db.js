@@ -1,58 +1,77 @@
 
 window.TripDB = (() => {
-  let client=null, trip=null, user=null;
+  let client=null, trip=null, authUser=null, member=null;
 
   function cfg(){ return window.SUPABASE_CONFIG || {}; }
 
-  async function init(){
+  async function ensureAnonSession(){
     const c=cfg();
-    if(!c.url || !c.key || !window.supabase) return {configured:false, authenticated:false};
-    client=window.supabase.createClient(c.url,c.key);
+    if(!c.url || !c.key || !window.supabase) return {configured:false};
+    if(!client) client=window.supabase.createClient(c.url,c.key);
 
-    const {data:{session}}=await client.auth.getSession();
-    user=session?.user || null;
-
-    if(!user){
-      return {configured:true, authenticated:false};
+    let {data:{session}}=await client.auth.getSession();
+    if(!session){
+      const {data,error}=await client.auth.signInAnonymously();
+      if(error) throw error;
+      session=data.session;
     }
-
-    // Keep a simple public profile so edits can show a human-readable identity.
-    await client.from("profiles").upsert({
-      id:user.id,
-      email:user.email || null,
-      display_name:user.user_metadata?.full_name || user.email?.split("@")[0] || "عضو"
-    }, {onConflict:"id"});
-
-    const {data,error}=await client.from("trips").select("*").eq("slug",c.tripSlug).single();
-    if(error) throw error;
-    trip=data;
-    return {configured:true, authenticated:true, trip, user};
+    authUser=session?.user || null;
+    return {configured:true};
   }
 
-  async function sendMagicLink(email){
-    const c=cfg();
-    if(!client) client=window.supabase.createClient(c.url,c.key);
-    const {error}=await client.auth.signInWithOtp({
-      email,
-      options:{ emailRedirectTo: c.siteUrl || window.location.origin }
+  async function init(){
+    const ready=await ensureAnonSession();
+    if(!ready.configured) return {configured:false,bound:false};
+
+    const {data:t,error:te}=await client.from("trips")
+      .select("id,slug,name,start_date,end_date,target_people")
+      .eq("slug",cfg().tripSlug).single();
+    if(te) throw te;
+    trip=t;
+
+    const {data:m,error:me}=await client.rpc("get_my_trip_member");
+    if(me) throw me;
+    member = Array.isArray(m) ? (m[0]||null) : m;
+    return {configured:true,bound:!!member,trip,member};
+  }
+
+  async function loginChoices(){
+    await ensureAnonSession();
+    const {data,error}=await client.rpc("list_trip_members_for_login",{p_trip_slug:cfg().tripSlug});
+    if(error) throw error;
+    return data || [];
+  }
+
+  async function claimOrLogin(memberId,pin){
+    await ensureAnonSession();
+    const {data,error}=await client.rpc("claim_or_login_trip_member",{
+      p_member_id:memberId,
+      p_pin:String(pin)
     });
     if(error) throw error;
-    return true;
+    member = Array.isArray(data) ? (data[0]||null) : data;
+    return member;
   }
 
-  async function signOut(){
-    if(client) await client.auth.signOut();
-    location.href = cfg().siteUrl || "index.html";
+  async function forgetDevice(){
+    await ensureAnonSession();
+    try{ await client.rpc("forget_this_trip_device"); }catch(e){ console.warn(e); }
+    await client.auth.signOut();
+    location.href="login.html";
   }
 
-  function getUser(){ return user; }
-  function isAuthenticated(){ return !!user; }
+  function getMember(){ return member; }
+  function isBound(){ return !!member; }
   function tripId(){ return trip?.id || null; }
 
   async function list(table, opts={}){
-    if(!user) return null;
-    let q=client.from(table).select(opts.select||"*");
-    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table)) q=q.eq("trip_id",trip.id);
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    let sel=opts.select||"*";
+    if(table==="members" && sel==="*") sel="id,trip_id,name,role,joke,confirmed,sort_order";
+    let q=client.from(table).select(sel);
+    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table)){
+      q=q.eq("trip_id",trip.id);
+    }
     if(opts.order) q=q.order(opts.order,{ascending:opts.asc!==false});
     const {data,error}=await q;
     if(error) throw error;
@@ -60,70 +79,69 @@ window.TripDB = (() => {
   }
 
   async function insert(table,row){
-    if(!user) throw new Error("LOGIN_REQUIRED");
-    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table) && !row.trip_id) row.trip_id=trip.id;
-    row.created_by = row.created_by || user.id;
-    row.updated_by = user.id;
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table) && !row.trip_id){
+      row.trip_id=trip.id;
+    }
     const {data,error}=await client.from(table).insert(row).select().single();
     if(error) throw error;
     return data;
   }
 
   async function update(table,id,patch){
-    if(!user) throw new Error("LOGIN_REQUIRED");
-    patch.updated_by=user.id;
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {data,error}=await client.from(table).update(patch).eq("id",id).select().single();
     if(error) throw error;
     return data;
   }
 
   async function remove(table,id){
-    if(!user) throw new Error("LOGIN_REQUIRED");
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {error}=await client.from(table).delete().eq("id",id);
     if(error) throw error;
     return true;
   }
 
   async function responsibilities(){
-    if(!user) return null;
-    const {data,error}=await client.from("responsibilities").select("*");
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.from("responsibilities").select("category_id,member_id");
     if(error) throw error;
-    return data;
+    return data || [];
   }
 
   async function upsertResponsibility(categoryId,memberId){
-    if(!user) throw new Error("LOGIN_REQUIRED");
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     if(!memberId){
       const {error}=await client.from("responsibilities").delete().eq("category_id",categoryId);
       if(error) throw error;
       return;
     }
     const {data,error}=await client.from("responsibilities")
-      .upsert({
-        category_id:categoryId,
-        member_id:memberId,
-        updated_by:user.id,
-        updated_at:new Date().toISOString()
-      },{onConflict:"category_id"}).select().single();
+      .upsert({category_id:categoryId,member_id:memberId,updated_at:new Date().toISOString()},{onConflict:"category_id"})
+      .select("category_id,member_id").single();
     if(error) throw error;
     return data;
   }
 
-  async function recentChanges(limit=20){
-    if(!user) return [];
+  async function recentChanges(limit=12){
+    if(!member) return [];
     const {data,error}=await client.from("change_log")
-      .select("id,table_name,record_id,action,changed_at,changed_by,profiles(display_name,email)")
-      .order("changed_at",{ascending:false}).limit(limit);
-    if(error) return [];
+      .select("id,table_name,action,changed_at,member_id,members(name)")
+      .order("changed_at",{ascending:false})
+      .limit(limit);
+    if(error){ console.warn(error); return []; }
     return data || [];
   }
 
   function subscribe(table, callback){
-    if(!user) return null;
+    if(!member) return null;
     return client.channel(`trip-${table}`)
       .on("postgres_changes",{event:"*",schema:"public",table},callback)
       .subscribe();
   }
 
-  return {init,sendMagicLink,signOut,getUser,isAuthenticated,tripId,list,insert,update,remove,responsibilities,upsertResponsibility,recentChanges,subscribe};
+  return {
+    init,loginChoices,claimOrLogin,forgetDevice,getMember,isBound,tripId,
+    list,insert,update,remove,responsibilities,upsertResponsibility,recentChanges,subscribe
+  };
 })();

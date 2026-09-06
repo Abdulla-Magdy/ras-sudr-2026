@@ -132,33 +132,44 @@ async function renderIdeas(){
   let a=DBLIVE?await TripDB.list("ideas",{order:"created_at",asc:false}):JSON.parse(localStorage.getItem("tripIdeas")||"[]");
   b.innerHTML=a.length?a.map(x=>`<div class="card">${x.body}</div>`).join(""):`<div class="muted">لسه مفيش اقتراحات.</div>`;
 }
+
+async function renderRecentChanges(){
+  let b=$("#recentChanges"); if(!b) return;
+  const a=await TripDB.recentChanges(10);
+  const tableNames={meal_plan:"خطة الأكل",shopping_items:"قائمة المشتريات",expenses:"المصاريف",ideas:"الاقتراحات",categories:"التصنيفات",members:"الأعضاء"};
+  const actions={INSERT:"أضاف",UPDATE:"عدّل",DELETE:"حذف"};
+  b.innerHTML=a.length?a.map(x=>{
+    const who=x.members?.name||"أحد الأشقياء";
+    const what=tableNames[x.table_name]||x.table_name;
+    const act=actions[x.action]||x.action;
+    const d=new Date(x.changed_at).toLocaleString("ar-EG",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+    return `<div class="activity-row"><strong>${who}</strong> ${act} <span>${what}</span><small>${d}</small></div>`;
+  }).join(""):`<div class="muted">لسه مفيش تعديلات.</div>`;
+}
+
 function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 15px;background:#071824;border:1px solid rgba(255,255,255,.15);border-radius:999px;z-index:100";document.body.appendChild(e)}e.textContent=t;e.style.display="block";clearTimeout(window._tt);window._tt=setTimeout(()=>e.style.display="none",1800)}
 
 document.addEventListener("DOMContentLoaded",async()=>{
   activateNav();
-  let r=await TripDB.init();
+  let r;
+  try{ r=await TripDB.init(); }
+  catch(e){ console.error(e); location.href="login.html"; return; }
 
-  if(!r.configured){
-    location.href="login.html";
-    return;
-  }
-  if(!r.authenticated){
-    location.href="login.html";
-    return;
-  }
+  if(!r.configured || !r.bound){ location.href="login.html"; return; }
 
   DBLIVE=true;
   setDbState();
-  let user=TripDB.getUser();
+  let m=TripDB.getMember();
   let bar=$("#userBar");
   if(bar){
-    bar.innerHTML=`<span class="muted">${user.email||""}</span> <button id="logoutBtn" class="btn secondary">خروج</button>`;
-    $("#logoutBtn").onclick=()=>TripDB.signOut();
+    bar.innerHTML=`<span class="member-chip">👤 ${m.name}</span><button id="switchMember" class="btn secondary">تغيير العضو</button>`;
+    $("#switchMember").onclick=()=>TripDB.forgetDevice();
   }
 
   await loadCore();
   await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities()]);
   foodAddInit();expenseInit();ideasInit();
+  await renderRecentChanges();
 
   if(DBLIVE){
     ["meal_plan","shopping_items","responsibilities","expenses","ideas"].forEach(t=>TripDB.subscribe(t,()=>location.reload()));

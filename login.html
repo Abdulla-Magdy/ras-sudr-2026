@@ -1,28 +1,97 @@
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>دخول الشلة — Ras Sudr</title><link rel="stylesheet" href="assets/style.css"></head><body>
-<main class="shell" style="max-width:700px;padding-top:70px">
-  <section class="hero"><div class="eyebrow">CREW ACCESS</div><h1>دخول الشلة</h1><div class="subtitle">اكتب إيميلك وهيوصلك لينك دخول. مفيش باسورد.</div></section>
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>دخول الأشقياء — Ras Sudr</title><link rel="stylesheet" href="assets/style.css">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="الأشقياء"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"></head><body>
+<main class="shell" style="max-width:720px;padding-top:55px">
+  <section class="hero">
+    <div class="eyebrow">AL ASHQEYA ACCESS 😎</div>
+    <h1>دخول الأشقياء</h1>
+    <div class="subtitle">اختار اسمك. أول مرة بس هتعمل PIN خاص بيك.</div><div style="margin-top:14px"><button id="installAppBtn" class="install-app-btn">📲 نزّل تطبيق الأشقياء</button></div>
+  </section>
+
   <section class="section"><div class="card">
-    <input id="loginEmail" class="text-input" type="email" placeholder="name@gmail.com">
-    <div style="margin-top:10px"><button id="sendLink" class="btn">ابعت لينك الدخول</button></div>
-    <div id="loginMsg" class="notice" style="display:none;margin-top:12px"></div>
+    <label class="muted">مين إنت؟</label>
+    <select id="memberSelect" class="select-input" style="margin-top:7px">
+      <option value="">اختار اسمك...</option>
+    </select>
+
+    <div id="pinArea" style="display:none;margin-top:14px">
+      <label id="pinLabel" class="muted">PIN</label>
+      <input id="pinInput" class="text-input pin-input" inputmode="numeric" maxlength="4"
+             autocomplete="one-time-code" placeholder="••••" style="margin-top:7px;text-align:center;font-size:28px;letter-spacing:10px">
+      <div id="confirmWrap" style="display:none;margin-top:10px">
+        <input id="pinConfirm" class="text-input pin-input" inputmode="numeric" maxlength="4"
+               placeholder="أكد الـ PIN" style="text-align:center;font-size:22px;letter-spacing:7px">
+      </div>
+      <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">دخول</button>
+    </div>
+
+    <div id="msg" class="notice" style="display:none;margin-top:12px"></div>
+    <div class="muted" style="font-size:10px;margin-top:14px">
+      الجهاز هيفتكر دخولك تلقائيًا. لو فتحت من جهاز جديد هتكتب الـPIN بتاعك.
+    </div>
   </div></section>
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-config.js"></script>
 <script src="assets/db.js"></script>
 <script>
-document.getElementById("sendLink").onclick=async()=>{
-  const email=document.getElementById("loginEmail").value.trim();
-  const msg=document.getElementById("loginMsg");
-  if(!email)return;
+let choices=[];
+const $=s=>document.querySelector(s);
+function message(t,bad=false){
+  $("#msg").style.display="block";
+  $("#msg").textContent=t;
+  $("#msg").style.borderColor=bad?"rgba(255,100,100,.35)":"";
+}
+function pin4(v){ return /^\d{4}$/.test(v); }
+
+(async()=>{
   try{
-    await TripDB.sendMagicLink(email);
-    msg.style.display="block";
-    msg.textContent="تمام ✅ افتح الإيميل واضغط لينك الدخول.";
+    const state=await TripDB.init();
+    if(state.bound){ location.href="index.html"; return; }
+
+    choices=await TripDB.loginChoices();
+    $("#memberSelect").innerHTML='<option value="">اختار اسمك...</option>'+
+      choices.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");
+
+    $("#memberSelect").onchange=()=>{
+      const x=choices.find(a=>a.id===$("#memberSelect").value);
+      if(!x){ $("#pinArea").style.display="none"; return; }
+      $("#pinArea").style.display="block";
+      $("#pinInput").value=""; $("#pinConfirm").value="";
+      if(x.pin_set){
+        $("#pinLabel").textContent="اكتب الـPIN بتاعك";
+        $("#confirmWrap").style.display="none";
+        $("#loginBtn").textContent="دخول";
+      }else{
+        $("#pinLabel").textContent="أول مرة؟ اختار PIN من 4 أرقام";
+        $("#confirmWrap").style.display="block";
+        $("#loginBtn").textContent="ثبت الـPIN وادخل";
+      }
+    };
+
+    $("#loginBtn").onclick=async()=>{
+      const x=choices.find(a=>a.id===$("#memberSelect").value);
+      const pin=$("#pinInput").value.trim(), confirmPin=$("#pinConfirm").value.trim();
+      if(!x) return message("اختار اسمك الأول.",true);
+      if(!pin4(pin)) return message("الـPIN لازم يكون 4 أرقام.",true);
+      if(!x.pin_set && pin!==confirmPin) return message("تأكيد الـPIN مش مطابق.",true);
+
+      $("#loginBtn").disabled=true;
+      try{
+        await TripDB.claimOrLogin(x.id,pin);
+        location.href="index.html";
+      }catch(e){
+        const m=String(e.message||e);
+        if(m.includes("INVALID_PIN")) message("الـPIN مش صح 👀",true);
+        else if(m.includes("PIN_ALREADY_SET")) message("الاسم ده اتعمله PIN بالفعل. اعمل Refresh وجرب تاني.",true);
+        else message("حصلت مشكلة: "+m,true);
+        $("#loginBtn").disabled=false;
+      }
+    };
   }catch(e){
-    msg.style.display="block";
-    msg.textContent="حصلت مشكلة: "+e.message;
+    message("محتاجين نكمل إعداد Supabase الأول: "+(e.message||e),true);
   }
-};
-(async()=>{const r=await TripDB.init();if(r.authenticated) location.href="index.html";})();
-</script></body></html>
+})();
+</script><script src="assets/install.js"></script></body></html>

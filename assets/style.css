@@ -29,3 +29,26 @@ table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;text-align:rig
 .inline-form{display:grid;grid-template-columns:1.5fr .6fr .7fr auto;gap:8px}
 @media(max-width:850px){.edit-row{grid-template-columns:1fr 1fr}.edit-row .wide{grid-column:1/-1}.inline-form{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.edit-row,.inline-form{grid-template-columns:1fr}}
+
+.member-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(0,173,171,.12);border:1px solid rgba(0,173,171,.2);font-size:11px}
+#userBar{display:flex;gap:7px;align-items:center}
+#userBar .btn{padding:6px 9px;font-size:10px}
+.activity-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
+.activity-row strong{color:#fff}.activity-row span{color:#b9c9d2}.activity-row small{color:#718996;font-size:10px;direction:ltr}
+.pin-input{font-variant-numeric:tabular-nums}
+@media(max-width:700px){#userBar .member-chip{display:none}.activity-row{grid-template-columns:1fr auto}.activity-row small{grid-column:2}}
+
+.install-app-btn{
+  display:none;align-items:center;justify-content:center;gap:7px;
+  padding:7px 11px;border-radius:999px;border:1px solid rgba(242,225,188,.25);
+  background:linear-gradient(135deg,rgba(82,53,140,.92),rgba(0,173,171,.72));
+  color:#fff;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap
+}
+.install-app-btn:hover{transform:translateY(-1px)}
+.install-modal{position:fixed;inset:0;background:rgba(3,7,15,.74);backdrop-filter:blur(8px);z-index:9999;display:grid;place-items:center;padding:18px}
+.install-dialog{width:min(420px,100%);background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:24px;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.install-close{position:absolute;left:14px;top:10px;background:transparent;color:#fff;border:0;font-size:28px;cursor:pointer}
+.install-icon{font-size:36px}.install-dialog h3{margin:8px 0}.install-dialog p{color:#aab9c2}
+.install-steps{display:grid;gap:9px;margin-top:14px}.install-steps>div{background:rgba(255,255,255,.05);border-radius:14px;padding:11px 12px}
+.install-steps b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#52358C;margin-left:8px}
+@media(max-width:700px){.install-app-btn{padding:7px 9px;font-size:9px}}
