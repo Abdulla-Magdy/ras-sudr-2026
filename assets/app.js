@@ -391,6 +391,20 @@ async function renderResponsibilities(){
   }
 }
 
+
+function updatePurchaseBatchButtonState(){
+  const btn=$("#recordPurchaseBatch");
+  if(!btn) return;
+  const selected=$$(".purchase-item-check:checked").length;
+  const amount=Number($("#purchaseBatchAmount")?.value||0);
+  btn.disabled=!(selected>0 && amount>0);
+  btn.textContent=selected>0
+    ? `✓ سجّل الفاتورة واقفل ${selected} ${selected===1?"صنف":"أصناف"}`
+    : "اختار المشتريات الأول";
+  const counter=$("#selectedPurchaseCount");
+  if(counter) counter.textContent=`${selected} مختارين`;
+}
+
 async function renderPurchaseQueue(){
   const box=$("#purchaseQueue"); if(!box) return;
 
@@ -421,12 +435,16 @@ async function renderPurchaseQueue(){
       <span>${x.responsible_member_id?foodResponsibleName(x.responsible_member_id):"اختياري"}</span>
     </label>
   `).join(""):`<div class="empty-finance">مفيش مشتريات معلّقة على الشخص ده حاليًا ✅</div>`;
+
+  $$(".purchase-item-check").forEach(ch=>ch.onchange=updatePurchaseBatchButtonState);
+  updatePurchaseBatchButtonState();
 }
 
 async function expenseInit(){
   if(!$("#expenseCategory"))return;
 
-  $("#expenseCategory").innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  const genericExpenseCategories=CATEGORIES.filter(c=>c.name!=="الأكل");
+  $("#expenseCategory").innerHTML=genericExpenseCategories.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
 
   if(IS_ADMIN){
     $("#expensePayer").innerHTML=memberOptions();
@@ -461,6 +479,9 @@ async function expenseInit(){
     await renderExpenses();
   };
 
+  const purchaseAmountInput=$("#purchaseBatchAmount");
+  if(purchaseAmountInput) purchaseAmountInput.oninput=updatePurchaseBatchButtonState;
+
   const addPurchase=$("#recordPurchaseBatch");
   if(addPurchase){
     addPurchase.onclick=async()=>{
@@ -469,8 +490,14 @@ async function expenseInit(){
       const note=$("#purchaseBatchNote").value.trim();
       const payerId=IS_ADMIN?($("#purchaseQueuePayer").value||CURRENT_MEMBER.id):CURRENT_MEMBER.id;
 
-      if(!ids.length){ toast("اختار الحاجات اللي الفاتورة دي بتغطيها"); return; }
-      if(!amount){ toast("اكتب إجمالي الفاتورة"); return; }
+      if(!ids.length){
+        toast("لازم تختار المشتريات اللي الفاتورة دي بتقفلها الأول");
+        return;
+      }
+      if(!amount){
+        toast("بعد اختيار المشتريات اكتب إجمالي الفاتورة");
+        return;
+      }
 
       addPurchase.disabled=true;
       try{
@@ -480,11 +507,16 @@ async function expenseInit(){
         toast("الفاتورة اتسجلت والمشتريات اتقفلت ✅");
         await Promise.all([renderPurchaseQueue(),renderExpenses(),renderFood(),renderResponsibilities()]);
       }catch(e){
-        console.error(e);
-        const msg=String(e.message||e);
+        console.error("Grouped purchase error:",e);
+        const msg=String(e?.message||e||"");
         if(msg.includes("ITEM_ALREADY_PURCHASED")) toast("في صنف منهم متسجل كمشتَرى بالفعل");
         else if(msg.includes("ITEM_NOT_ASSIGNED_TO_PAYER")) toast("في صنف مش مسؤول عنه الشخص المختار");
-        else toast("حصلت مشكلة في تسجيل الفاتورة");
+        else if(msg.includes("MIXED_OR_MISSING_CATEGORIES") || msg.includes("MIXED_CATEGORIES")) toast("المشتريات المختارة مش تحت نفس التصنيف");
+        else if(msg.includes("INVALID_AMOUNT")) toast("راجع إجمالي الفاتورة");
+        else if(msg.includes("NO_ITEMS_SELECTED")) toast("اختار المشتريات اللي الفاتورة بتغطيها");
+        else if(msg.includes("PAYER_NOT_ALLOWED")) toast("مينفعش تسجل الفاتورة باسم شخص تاني");
+        else if(msg.includes("CATEGORY_NOT_FOUND")) toast("الصنف ناقص تصنيف. كلم بودا");
+        else toast("حصلت مشكلة في تسجيل الفاتورة — جرّب تاني بعد التحديث");
       }finally{
         addPurchase.disabled=false;
       }

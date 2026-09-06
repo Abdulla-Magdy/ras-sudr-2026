@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v15";
+const CACHE_NAME = "ras-sudr-baz-v17";
 const CORE = [
   "./",
   "./index.html",
@@ -11,15 +11,15 @@ const CORE = [
   "./ideas.html",
   "./bag.html",
   "./manifest.webmanifest",
-  "./assets/style.css?v=15",
-  "./assets/app.js?v=15",
-  "./assets/tutorial.js?v=15",
-  "./assets/auto-update.js?v=15",
-  "./assets/pwa-gate.js?v=15",
-  "./assets/db.js?v=15",
-  "./assets/fallback-data.js?v=15",
-  "./assets/supabase-config.js?v=15",
-  "./assets/install.js?v=15",
+  "./assets/style.css?v=17",
+  "./assets/app.js?v=17",
+  "./assets/tutorial.js?v=17",
+  "./assets/auto-update.js?v=17",
+  "./assets/pwa-gate.js?v=17",
+  "./assets/db.js?v=17",
+  "./assets/fallback-data.js?v=17",
+  "./assets/supabase-config.js?v=17",
+  "./assets/install.js?v=17",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/apple-touch-icon.png",

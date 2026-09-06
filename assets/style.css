@@ -865,3 +865,20 @@ body.tutorial-open{overflow:hidden}
 
 /* installed app: keep help one tap away */
 .installed-pwa .tutorial-help-fab{display:grid}
+
+.tutorial-step-label{direction:ltr;unicode-bidi:isolate}
+
+/* ===== V17: require shopping selection before food invoice ===== */
+.purchase-selection-status{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:12px 0 8px;padding:10px 12px;border-radius:14px;
+  background:rgba(255,189,89,.06);border:1px solid rgba(255,189,89,.14)
+}
+.purchase-selection-status strong{color:#ffd48a;font-size:11px}
+.purchase-selection-status span{color:var(--muted);font-size:9px}
+#recordPurchaseBatch:disabled{
+  opacity:.45;cursor:not-allowed;filter:saturate(.45)
+}
+@media(max-width:760px){
+  .purchase-selection-status{align-items:flex-start;flex-direction:column}
+}
