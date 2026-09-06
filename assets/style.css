@@ -203,3 +203,244 @@ table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;text-align:rig
   .food-edit-grid{grid-template-columns:1fr}
   .expense-form-grid{grid-template-columns:1fr}.expense-note-field,.expense-add-btn{grid-column:auto}
 }
+
+/* ===== Mobile header fix v2 ===== */
+@media(max-width:760px){
+  .topbar{
+    position:sticky!important;
+    top:0!important;
+    z-index:95!important;
+    min-height:58px!important;
+    height:auto!important;
+    padding-top:env(safe-area-inset-top)!important;
+    background:rgba(6,19,29,.96)!important;
+    border-bottom:1px solid rgba(255,255,255,.09)!important;
+    overflow:visible!important;
+  }
+
+  .topbar .shell.nav{
+    width:calc(100% - 24px)!important;
+    min-height:58px!important;
+    padding:7px 0!important;
+    margin:0 auto!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+  }
+
+  .brand{
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    min-width:0!important;
+    margin:0!important;
+    font-size:14px!important;
+    line-height:1!important;
+    overflow:hidden!important;
+  }
+  .brand-mark{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    border-radius:12px!important;
+  }
+  .brand span:last-child{
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  #dbState{display:none!important}
+
+  #userBar{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:6px!important;
+    min-width:0!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+  #userBar .member-chip{
+    display:inline-flex!important;
+    max-width:105px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:9px!important;
+    padding:6px 8px!important;
+  }
+  #switchMember{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    padding:0!important;
+    display:grid!important;
+    place-items:center!important;
+    font-size:0!important;
+    border-radius:11px!important;
+  }
+  #switchMember::after{
+    content:"⇄";
+    font-size:17px!important;
+    line-height:1!important;
+  }
+
+  /* Keep install visible, but move it away from the header. */
+  .install-app-btn{
+    position:fixed!important;
+    left:max(12px,env(safe-area-inset-left))!important;
+    bottom:calc(76px + env(safe-area-inset-bottom))!important;
+    z-index:92!important;
+    width:auto!important;
+    height:36px!important;
+    padding:0 11px!important;
+    border-radius:999px!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.28)!important;
+  }
+
+  /* Actual app navigation belongs at the bottom, never inside the top header. */
+  .links{
+    position:fixed!important;
+    inset-inline:0!important;
+    top:auto!important;
+    bottom:0!important;
+    z-index:100!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    height:calc(66px + env(safe-area-inset-bottom))!important;
+    margin:0!important;
+    padding:
+      6px
+      max(5px,env(safe-area-inset-right))
+      calc(6px + env(safe-area-inset-bottom))
+      max(5px,env(safe-area-inset-left))!important;
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:2px!important;
+    overflow:hidden!important;
+    background:rgba(5,16,25,.98)!important;
+    border-top:1px solid rgba(255,255,255,.11)!important;
+    border-bottom:0!important;
+    backdrop-filter:blur(18px)!important;
+    transform:none!important;
+  }
+
+  .links a{
+    min-width:0!important;
+    width:100%!important;
+    height:52px!important;
+    padding:4px 1px!important;
+    margin:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:2px!important;
+    border-radius:12px!important;
+    font-size:8px!important;
+    line-height:1.1!important;
+    overflow:hidden!important;
+  }
+  .links a.active{
+    background:rgba(102,230,223,.10)!important;
+    box-shadow:inset 0 0 0 1px rgba(102,230,223,.06)!important;
+  }
+  .nav-icon{
+    display:block!important;
+    font-size:17px!important;
+    line-height:1!important;
+  }
+  .nav-label{
+    display:block!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  body{
+    padding-bottom:calc(76px + env(safe-area-inset-bottom))!important;
+  }
+}
+
+@media(max-width:430px){
+  .topbar .shell.nav{width:calc(100% - 18px)!important}
+  .brand{font-size:13px!important}
+  .brand-mark{width:32px!important;height:32px!important;min-width:32px!important}
+  #userBar .member-chip{max-width:82px!important}
+  .links a{font-size:7.5px!important}
+  .nav-icon{font-size:16px!important}
+  .install-app-btn{
+    font-size:0!important;
+    width:38px!important;
+    padding:0!important;
+  }
+  .install-app-btn::after{content:"📲";font-size:17px!important}
+}
+
+/* ===== Admin member management ===== */
+.admin-shortcut-card{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 18px;border-radius:20px;
+  background:linear-gradient(135deg,rgba(82,53,140,.24),rgba(0,173,171,.10));
+  border:1px solid rgba(102,230,223,.16);
+  text-decoration:none!important;color:#fff!important;
+}
+.admin-shortcut-card>div{display:grid;gap:5px}
+.admin-shortcut-card strong{font-size:18px}
+.admin-shortcut-card small{color:var(--muted);font-size:10px}
+.admin-shortcut-arrow{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.06);font-size:18px
+}
+.admin-add-member{
+  padding:15px;border-radius:18px;margin-bottom:12px;
+  background:rgba(0,173,171,.055);border:1px dashed rgba(0,173,171,.18)
+}
+.admin-add-member-grid{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end
+}
+@media(max-width:700px){
+  .admin-shortcut-card{padding:14px}
+  .admin-shortcut-card strong{font-size:16px}
+  .admin-add-member-grid{grid-template-columns:1fr}
+  .admin-add-member-grid .btn{width:100%}
+}
+
+/* ===== Private bag / packing list ===== */
+.privacy-badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:7px 11px;border-radius:999px;background:rgba(142,229,155,.09);border:1px solid rgba(142,229,155,.16);color:#baf5c4;font-size:10px;font-weight:800}
+.bag-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.bag-kpi{padding:14px;border-radius:17px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.bag-kpi span{display:block;color:var(--muted);font-size:10px}.bag-kpi strong{display:block;font-size:25px;margin-top:4px}
+.bag-kpi.done strong{color:#baf5c4}.bag-kpi.accent strong{color:var(--aqua)}
+.bag-progress{height:9px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.06);margin-top:10px}
+.bag-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--aqua),#8ee59b);transition:width .25s ease}
+.bag-add-grid{display:grid;grid-template-columns:1.3fr 1fr .65fr 1.4fr auto;gap:8px;align-items:end}
+.bag-add-btn{height:42px}
+.quick-pack{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px}
+.quick-pack button{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.04);color:#dfeaf0;border-radius:999px;padding:6px 9px;cursor:pointer;font-size:10px}
+.quick-pack button:hover{background:rgba(102,230,223,.08)}
+.bag-group{margin-bottom:16px}.bag-group-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}.bag-group-title>span{font-size:20px}.bag-group-title strong{font-size:15px}.bag-group-title small{margin-right:auto;color:var(--muted)}
+.bag-items{display:grid;gap:7px}.bag-item{display:grid;grid-template-columns:34px 1fr 28px;align-items:center;gap:10px;padding:11px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.bag-item.packed{opacity:.65}.bag-item.packed .bag-item-body strong{text-decoration:line-through}
+.bag-check{width:32px;height:32px;border-radius:10px;border:1px solid rgba(102,230,223,.25);background:rgba(102,230,223,.06);color:#baf5c4;font-size:17px;font-weight:900;cursor:pointer}
+.bag-item-body strong{display:block}.bag-item-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:9px;margin-top:4px}
+.bag-delete{border:0;background:transparent;color:#ffb3aa;font-size:22px;cursor:pointer}
+.bag-empty{text-align:center;padding:28px}.bag-empty>div{font-size:38px}.bag-empty h3{margin:8px 0}
+
+@media(max-width:900px){
+  .bag-add-grid{grid-template-columns:1fr 1fr}
+  .bag-note{grid-column:1/-1}.bag-add-btn{grid-column:1/-1}
+}
+@media(max-width:760px){
+  /* Keep six primary mobile tabs; Ideas stays accessible from Home. */
+  .links{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+  .links a[data-page="ideas.html"]{display:none!important}
+  .bag-kpis{grid-template-columns:1fr 1fr}
+  .bag-add-grid{grid-template-columns:1fr}
+  .bag-note,.bag-add-btn{grid-column:auto}
+  .bag-hero .subtitle{font-size:13px}
+}

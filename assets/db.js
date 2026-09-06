@@ -91,7 +91,7 @@ window.TripDB = (() => {
     let sel=opts.select||"*";
     if(table==="members" && sel==="*") sel="id,trip_id,name,role,joke,confirmed,sort_order,access_role";
     let q=client.from(table).select(sel);
-    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table)) q=q.eq("trip_id",trip.id);
+    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items"].includes(table)) q=q.eq("trip_id",trip.id);
     if(opts.order) q=q.order(opts.order,{ascending:opts.asc!==false});
     const {data,error}=await q;
     if(error) throw error;
@@ -100,7 +100,7 @@ window.TripDB = (() => {
 
   async function insert(table,row){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
-    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table) && !row.trip_id) row.trip_id=trip.id;
+    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items"].includes(table) && !row.trip_id) row.trip_id=trip.id;
     const {data,error}=await client.from(table).insert(row).select().single();
     if(error) throw error;
     return data;

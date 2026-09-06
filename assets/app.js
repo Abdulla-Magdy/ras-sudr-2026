@@ -517,9 +517,162 @@ async function renderIdeas(){
 }
 
 
+
+function escapeHtml(v){
+  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+async function renderPrivateBag(){
+  const list=$("#bagList"); if(!list) return;
+  let items=await TripDB.list("private_packing_items",{order:"created_at",asc:true});
+  const mine=items.filter(x=>x.owner_member_id===CURRENT_MEMBER.id);
+
+  const total=mine.length;
+  const packed=mine.filter(x=>x.packed).length;
+  const remaining=total-packed;
+  const pct=total?Math.round(packed/total*100):0;
+
+  if($("#bagTotal")) $("#bagTotal").textContent=total.toLocaleString("ar-EG");
+  if($("#bagPacked")) $("#bagPacked").textContent=packed.toLocaleString("ar-EG");
+  if($("#bagRemaining")) $("#bagRemaining").textContent=remaining.toLocaleString("ar-EG");
+  if($("#bagPercent")) $("#bagPercent").textContent=pct+"%";
+  if($("#bagProgressBar")) $("#bagProgressBar").style.width=pct+"%";
+  if($("#bagOwnerLabel")) $("#bagOwnerLabel").textContent=`قائمة ${CURRENT_MEMBER.name} الخاصة`;
+
+  const groups=["ملابس","بحر","إلكترونيات","ترفيه","عناية شخصية","أخرى"];
+  const icons={"ملابس":"👕","بحر":"🏖️","إلكترونيات":"🔌","ترفيه":"🎮","عناية شخصية":"🧴","أخرى":"📦"};
+
+  if(!mine.length){
+    list.innerHTML=`<div class="card bag-empty"><div>🎒</div><h3>شنطتك لسه فاضية</h3><p class="muted">ابدأ بحاجة بسيطة: فوطة، مايوه، شاحن… وبعدها زوّد براحتك خلال الأيام الجاية.</p></div>`;
+    return;
+  }
+
+  list.innerHTML=groups.map(cat=>{
+    const arr=mine.filter(x=>(x.category||"أخرى")===cat);
+    if(!arr.length) return "";
+    return `<section class="bag-group">
+      <div class="bag-group-title"><span>${icons[cat]||"📦"}</span><strong>${cat}</strong><small>${arr.filter(x=>x.packed).length}/${arr.length}</small></div>
+      <div class="bag-items">
+        ${arr.map(x=>`
+          <article class="bag-item ${x.packed?"packed":""}">
+            <button class="bag-check" data-id="${x.id}" data-packed="${x.packed}">
+              ${x.packed?"✓":""}
+            </button>
+            <div class="bag-item-body">
+              <strong>${escapeHtml(x.item_name)}</strong>
+              <div class="bag-item-meta">
+                ${x.quantity?`<span>الكمية: ${escapeHtml(x.quantity)}</span>`:""}
+                ${x.note?`<span>${escapeHtml(x.note)}</span>`:""}
+              </div>
+            </div>
+            <button class="bag-delete" data-id="${x.id}" title="حذف">×</button>
+          </article>
+        `).join("")}
+      </div>
+    </section>`;
+  }).join("");
+
+  $$(".bag-check").forEach(btn=>btn.onclick=async()=>{
+    const packed=btn.dataset.packed==="true";
+    await TripDB.update("private_packing_items",btn.dataset.id,{packed:!packed});
+    renderPrivateBag();
+  });
+
+  $$(".bag-delete").forEach(btn=>btn.onclick=async()=>{
+    if(!confirm("تحذف الحاجة دي من شنطتك؟")) return;
+    await TripDB.remove("private_packing_items",btn.dataset.id);
+    renderPrivateBag();
+  });
+}
+
+async function privateBagInit(){
+  if(!$("#addBagItem")) return;
+
+  async function add(name,category,quantity="",note=""){
+    if(!name.trim()) return;
+    await TripDB.insert("private_packing_items",{
+      owner_member_id:CURRENT_MEMBER.id,
+      item_name:name.trim(),
+      category:category||"أخرى",
+      quantity:quantity.trim()||null,
+      note:note.trim()||null,
+      packed:false
+    });
+    renderPrivateBag();
+  }
+
+  $("#addBagItem").onclick=async()=>{
+    const name=$("#bagItemName").value;
+    const category=$("#bagCategory").value;
+    const qty=$("#bagQty").value;
+    const note=$("#bagNote").value;
+    if(!name.trim()){ toast("اكتب الحاجة الأول"); return; }
+    await add(name,category,qty,note);
+    $("#bagItemName").value="";
+    $("#bagQty").value="";
+    $("#bagNote").value="";
+    toast("اتضافت لشنطتك 🎒");
+  };
+
+  $$(".quick-pack button").forEach(btn=>btn.onclick=async()=>{
+    await add(btn.dataset.name,btn.dataset.category);
+    toast(`${btn.dataset.name} اتضافت`);
+  });
+
+  await renderPrivateBag();
+}
+
 async function renderAdminPanel(){
   const panel=$("#adminPanel"); if(!panel || !IS_ADMIN) return;
   panel.style.display="block";
+  const shortcut=$("#adminShortcut"); if(shortcut) shortcut.style.display="block";
+
+  const addMemberBtn=$("#addMemberBtn");
+  if(addMemberBtn && !addMemberBtn.dataset.bound){
+    addMemberBtn.dataset.bound="1";
+    addMemberBtn.onclick=async()=>{
+      const name=$("#newMemberName")?.value.trim();
+      const role=$("#newMemberRole")?.value.trim();
+
+      if(!name){ toast("اكتب اسم العضو الأول"); return; }
+      if(MEMBERS.some(m=>m.name.trim().toLowerCase()===name.toLowerCase())){
+        toast("الاسم موجود بالفعل");
+        return;
+      }
+
+      addMemberBtn.disabled=true;
+      try{
+        const nextOrder=MEMBERS.length
+          ? Math.max(...MEMBERS.map(m=>Number(m.sort_order||0)))+1
+          : 1;
+
+        const created=await TripDB.insert("members",{
+          name,
+          role:role||"",
+          joke:"",
+          confirmed:true,
+          sort_order:nextOrder,
+          access_role:"member"
+        });
+
+        MEMBERS.push(created);
+        $("#newMemberName").value="";
+        $("#newMemberRole").value="";
+        toast(`${name} اتضاف للرحلة ✅`);
+
+        renderCrew();
+        renderParticipantCount();
+        if($("#expenseList")) await renderExpenses();
+        await renderAdminPanel();
+      }catch(e){
+        console.error(e);
+        toast("حصلت مشكلة أثناء إضافة العضو");
+      }finally{
+        addMemberBtn.disabled=false;
+      }
+    };
+  }
+
   const reqs=await TripDB.adminResetRequests();
   const rb=$("#resetRequests");
   rb.innerHTML=reqs.length?`<h3>طلبات نسيت الـPIN</h3>`+reqs.map(r=>`
@@ -603,7 +756,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
   await loadCore();
   renderParticipantCount();
   await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities(),renderFoodResponsibilities()]);
-  foodAddInit();expenseInit();ideasInit();
+  foodAddInit();expenseInit();ideasInit();privateBagInit();
   await renderRecentChanges(); await renderAdminPanel();
 
   if(DBLIVE){

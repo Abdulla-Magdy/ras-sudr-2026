@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="assets/style.css">
+<title>شنطتي — Ras Sudr 2026</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="الأشقياء">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+</head><body>
+<header class="topbar"><div class="shell nav"><a class="brand" href="index.html"><span class="brand-mark">🌊</span><span>Ras Sudr Mission</span></a><nav class="links">
+<a href="index.html" data-page="index.html"><span class="nav-icon">🏠</span><span class="nav-label">الرئيسية</span></a><a href="food.html" data-page="food.html"><span class="nav-icon">🍳</span><span class="nav-label">الأكل</span></a><a href="responsibilities.html" data-page="responsibilities.html"><span class="nav-icon">🙋</span><span class="nav-label">مسؤوليات</span></a><a href="expenses.html" data-page="expenses.html"><span class="nav-icon">💰</span><span class="nav-label">مصاريف</span></a><a href="crew.html" data-page="crew.html"><span class="nav-icon">😎</span><span class="nav-label">الأشقياء</span></a><a href="bag.html" data-page="bag.html"><span class="nav-icon">🎒</span><span class="nav-label">شنطتي</span></a><a href="ideas.html" data-page="ideas.html"><span class="nav-icon">💡</span><span class="nav-label">اقتراحات</span></a>
+</nav><button id="installAppBtn" class="install-app-btn">📲 نزّل التطبيق</button><span id="dbState" class="db-state">Shared Live</span><span id="userBar"></span></div></header>
+<main class="shell">
+  <section class="hero bag-hero">
+    <div class="eyebrow">PRIVATE PACKING LIST</div>
+    <h1>شنطتي 🎒</h1>
+    <div class="subtitle">جهّز حاجتك واحدة واحدة قبل السفر، والقائمة دي خاصة بيك إنت بس.</div>
+    <div class="privacy-badge">🔒 خاصة بك — لا تظهر لباقي الأشقياء ولا للأدمن</div>
+  </section>
+
+  <section class="section">
+    <div class="bag-kpis">
+      <div class="bag-kpi"><span>كل الحاجات</span><strong id="bagTotal">0</strong></div>
+      <div class="bag-kpi done"><span>اتجهزت</span><strong id="bagPacked">0</strong></div>
+      <div class="bag-kpi"><span>فاضل</span><strong id="bagRemaining">0</strong></div>
+      <div class="bag-kpi accent"><span>التقدم</span><strong id="bagPercent">0%</strong></div>
+    </div>
+    <div class="bag-progress"><i id="bagProgressBar" style="width:0%"></i></div>
+  </section>
+
+  <section class="section">
+    <div class="card bag-add-card">
+      <div class="section-title">
+        <div><span class="pill">PACK IT</span><h2 style="margin-top:8px">ضيف حاجة لشنطتك</h2></div>
+        <small>كل واحد بيشوف حاجته بس</small>
+      </div>
+      <div class="bag-add-grid">
+        <label class="mini-field"><span>الحاجة</span><input id="bagItemName" class="text-input" placeholder="مثال: بلايستيشن"></label>
+        <label class="mini-field"><span>التصنيف</span>
+          <select id="bagCategory" class="select-input">
+            <option value="ملابس">ملابس</option>
+            <option value="بحر">بحر</option>
+            <option value="إلكترونيات">إلكترونيات</option>
+            <option value="ترفيه">ترفيه</option>
+            <option value="عناية شخصية">عناية شخصية</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </label>
+        <label class="mini-field"><span>الكمية (اختياري)</span><input id="bagQty" class="text-input" placeholder="مثال: 2"></label>
+        <label class="mini-field bag-note"><span>ملاحظة (اختياري)</span><input id="bagNote" class="text-input" placeholder="مثال: ومعاه دراعين + HDMI"></label>
+        <button id="addBagItem" class="btn bag-add-btn">+ إضافة</button>
+      </div>
+
+      <div class="quick-pack">
+        <span class="muted">إضافات سريعة:</span>
+        <button data-name="فوطة" data-category="بحر">فوطة</button>
+        <button data-name="مايوه" data-category="بحر">مايوه</button>
+        <button data-name="شبشب" data-category="بحر">شبشب</button>
+        <button data-name="شاحن الموبايل" data-category="إلكترونيات">شاحن</button>
+        <button data-name="باور بانك" data-category="إلكترونيات">باور بانك</button>
+        <button data-name="واقي شمس" data-category="عناية شخصية">واقي شمس</button>
+        <button data-name="فرشة أسنان" data-category="عناية شخصية">فرشة أسنان</button>
+        <button data-name="بلايستيشن" data-category="ترفيه">بلايستيشن</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>قائمة شنطتي</h2>
+      <small id="bagOwnerLabel">خاصة بك</small>
+    </div>
+    <div id="bagList"></div>
+  </section>
+</main>
+<div class="footer">MY PRIVATE BAG • RAS SUDR 2026</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/fallback-data.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/install.js"></script>
+</body></html>
