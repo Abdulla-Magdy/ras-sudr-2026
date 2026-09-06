@@ -79,6 +79,16 @@ function foodResponsibilityBadge(item){
 }
 function foodMemberAction(item){
   if(IS_ADMIN) return "";
+
+  // بعد الشراء المسؤولية تبقى جزء من تاريخ الفاتورة،
+  // لذلك لا يمكن تركها أو نقلها.
+  if(item.purchased){
+    if(item.responsible_member_id===CURRENT_MEMBER.id){
+      return `<div class="food-purchase-lock">🔒 اتجابت واتقفلت على حسابك</div>`;
+    }
+    return "";
+  }
+
   if(!item.responsible_member_id){
     return `<button class="btn food-claim" data-id="${item.id}">أنا هجيب ده</button>`;
   }
@@ -89,6 +99,13 @@ function foodMemberAction(item){
 }
 function adminFoodOwnerSelect(item){
   if(!IS_ADMIN) return "";
+
+  if(item.purchased){
+    return `<div class="food-purchase-lock admin-lock">
+      🔒 تم الشراء بواسطة ${foodResponsibleName(item.responsible_member_id)||"—"} — المسؤولية مقفولة
+    </div>`;
+  }
+
   return `<label class="mini-field"><span>مسؤول الشراء</span>
     <select class="select-input food-owner-select" data-id="${item.id}">
       <option value="">غير محدد</option>
@@ -118,7 +135,7 @@ async function renderFood(){
         </div>
         <div class="food-head-badges">
           ${foodResponsibilityBadge(x)}
-          <span class="status ${x.purchased?"done":"open"}">${x.purchased?"اتجاب ✓":"لسه"}</span>
+          <span class="status ${x.purchased?"done":"open"}">${x.purchased?"تم الشراء ✓":"لسه"}</span>
         </div>
       </div>
 
@@ -857,18 +874,7 @@ async function renderAdminPanel(){
 
       addMemberBtn.disabled=true;
       try{
-        const nextOrder=MEMBERS.length
-          ? Math.max(...MEMBERS.map(m=>Number(m.sort_order||0)))+1
-          : 1;
-
-        const created=await TripDB.insert("members",{
-          name,
-          role:role||"",
-          joke:"",
-          confirmed:true,
-          sort_order:nextOrder,
-          access_role:"member"
-        });
+        const created=await TripDB.adminAddMember(name,role||"");
 
         MEMBERS.push(created);
         $("#newMemberName").value="";
@@ -880,8 +886,12 @@ async function renderAdminPanel(){
         if($("#expenseList")) await renderExpenses();
         await renderAdminPanel();
       }catch(e){
-        console.error(e);
-        toast("حصلت مشكلة أثناء إضافة العضو");
+        console.error("Add member error:",e);
+        const msg=String(e?.message||e||"");
+        if(msg.includes("MEMBER_ALREADY_EXISTS")) toast("الاسم موجود بالفعل");
+        else if(msg.includes("MEMBER_NAME_REQUIRED")) toast("اكتب اسم العضو الأول");
+        else if(msg.includes("ADMIN_ONLY")) toast("الإضافة متاحة للأدمن فقط");
+        else toast("حصلت مشكلة أثناء إضافة العضو");
       }finally{
         addMemberBtn.disabled=false;
       }
@@ -918,12 +928,29 @@ async function renderAdminPanel(){
     const target=MEMBERS.find(m=>m.id===id)?.name||"العضو";
     const msg=current?`تخلي ${target} خارج قسمة الرحلة؟ نصيب الفرد هيتحسب فورًا على العدد الجديد.`:`ترجّع ${target} لقسمة الرحلة؟`;
     if(!confirm(msg)) return;
-    await TripDB.update("members",id,{confirmed:!current});
-    const local=MEMBERS.find(m=>m.id===id); if(local) local.confirmed=!current;
-    toast("تم تحديث المشاركين ✅");
-    renderCrew();
-    if($("#expenseList")) await renderExpenses();
-    await renderAdminPanel();
+
+    btn.disabled=true;
+    try{
+      const result=await TripDB.adminSetMemberConfirmed(id,!current);
+      const local=MEMBERS.find(m=>m.id===id);
+      if(local) local.confirmed=result?.confirmed ?? !current;
+
+      toast(result?.confirmed===false
+        ? `${target} بقى خارج القسمة`
+        : `${target} رجع للرحلة ✅`);
+
+      renderCrew();
+      renderParticipantCount();
+      if($("#expenseList")) await renderExpenses();
+      await renderAdminPanel();
+    }catch(e){
+      console.error("Toggle participant error:",e);
+      const msg=String(e?.message||e||"");
+      if(msg.includes("ADMIN_ONLY")) toast("التعديل متاح للأدمن فقط");
+      else if(msg.includes("MEMBER_NOT_FOUND")) toast("العضو مش موجود");
+      else toast("حصلت مشكلة في تحديث حالة العضو");
+      btn.disabled=false;
+    }
   });
 
   $$(".reset-pin").forEach(btn=>btn.onclick=async()=>{

@@ -882,3 +882,38 @@ body.tutorial-open{overflow:hidden}
 @media(max-width:760px){
   .purchase-selection-status{align-items:flex-start;flex-direction:column}
 }
+
+/* ===== V19: purchased food items are closed/history ===== */
+.food-item-card.purchased{
+  opacity:.76;
+  background:linear-gradient(145deg,rgba(80,185,130,.08),rgba(255,255,255,.03));
+  border-color:rgba(115,224,155,.18);
+}
+.food-item-card.purchased .food-item-name{
+  text-decoration:line-through;
+  text-decoration-thickness:2px;
+  text-decoration-color:rgba(158,245,185,.78);
+  color:#b9c8ce;
+}
+.food-item-card.purchased .food-item-meta{
+  opacity:.72;
+}
+.food-item-card.purchased .status.done{
+  text-decoration:none;
+}
+.food-purchase-lock{
+  width:100%;
+  padding:10px 12px;
+  border-radius:13px;
+  background:rgba(115,224,155,.07);
+  border:1px solid rgba(115,224,155,.15);
+  color:#b8efca;
+  font-size:10px;
+  font-weight:800;
+  text-align:center;
+}
+.food-purchase-lock.admin-lock{
+  color:#c8d8de;
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.08);
+}

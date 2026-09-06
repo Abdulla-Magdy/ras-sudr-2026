@@ -68,6 +68,27 @@ window.TripDB = (() => {
     return data||[];
   }
 
+
+  async function adminAddMember(name,role=""){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("admin_add_trip_member",{
+      p_name:String(name||""),
+      p_role:String(role||"")
+    });
+    if(error) throw error;
+    return data;
+  }
+
+  async function adminSetMemberConfirmed(memberId,confirmed){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("admin_set_member_confirmed",{
+      p_member_id:memberId,
+      p_confirmed:!!confirmed
+    });
+    if(error) throw error;
+    return data;
+  }
+
   async function adminResetRequests(){
     const {data,error}=await client.rpc("admin_list_pin_reset_requests");
     if(error) throw error;
@@ -185,7 +206,7 @@ window.TripDB = (() => {
   }
 
   return {
-    init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminResetRequests,
+    init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminAddMember,adminSetMemberConfirmed,adminResetRequests,
     forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
     upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,recentChanges,subscribe
   };
