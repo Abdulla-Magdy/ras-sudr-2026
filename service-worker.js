@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v14";
+const CACHE_NAME = "ras-sudr-baz-v15";
 const CORE = [
   "./",
   "./index.html",
@@ -11,11 +11,15 @@ const CORE = [
   "./ideas.html",
   "./bag.html",
   "./manifest.webmanifest",
-  "./assets/style.css",
-  "./assets/app.js",
-  "./assets/db.js",
-  "./assets/fallback-data.js",
-  "./assets/supabase-config.js",
+  "./assets/style.css?v=15",
+  "./assets/app.js?v=15",
+  "./assets/tutorial.js?v=15",
+  "./assets/auto-update.js?v=15",
+  "./assets/pwa-gate.js?v=15",
+  "./assets/db.js?v=15",
+  "./assets/fallback-data.js?v=15",
+  "./assets/supabase-config.js?v=15",
+  "./assets/install.js?v=15",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/apple-touch-icon.png",
@@ -39,34 +43,48 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const req = event.request;
-  if (req.method !== "GET") return;
+  if(req.method !== "GET") return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+  if(url.origin !== self.location.origin) return;
 
-  // HTML/navigation: network first so new deployments show quickly.
-  if (req.mode === "navigate") {
+  const isAppCode =
+    req.mode === "navigate" ||
+    req.destination === "script" ||
+    req.destination === "style" ||
+    url.pathname.endsWith(".webmanifest");
+
+  // App shell/code: network first.
+  // When online, this avoids serving old code after a deployment.
+  if(isAppCode){
     event.respondWith(
-      fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(req, copy));
+      fetch(req, {cache:"no-store"}).then(res => {
+        if(res && res.ok){
+          const copy=res.clone();
+          caches.open(CACHE_NAME).then(c=>c.put(req,copy));
+        }
         return res;
-      }).catch(() => caches.match(req).then(r => r || caches.match("./index.html")))
+      }).catch(async()=>{
+        const cached=await caches.match(req);
+        if(cached) return cached;
+        if(req.mode==="navigate") return caches.match("./index.html");
+        throw new Error("offline");
+      })
     );
     return;
   }
 
-  // Static same-origin files: stale-while-revalidate.
+  // Images and other static files: cache first + background refresh.
   event.respondWith(
-    caches.match(req).then(cached => {
-      const fetchPromise = fetch(req).then(res => {
-        if (res && res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+    caches.match(req).then(cached=>{
+      const refresh=fetch(req).then(res=>{
+        if(res && res.ok){
+          const copy=res.clone();
+          caches.open(CACHE_NAME).then(c=>c.put(req,copy));
         }
         return res;
-      }).catch(() => cached);
-      return cached || fetchPromise;
+      }).catch(()=>cached);
+      return cached || refresh;
     })
   );
 });

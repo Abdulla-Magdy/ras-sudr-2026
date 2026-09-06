@@ -979,7 +979,7 @@ function initMobileMenu(){
 }
 
 
-function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 15px;background:#071824;border:1px solid rgba(255,255,255,.15);border-radius:999px;z-index:100";document.body.appendChild(e)}e.textContent=t;e.style.display="block";clearTimeout(window._tt);window._tt=setTimeout(()=>e.style.display="none",1800)}
+window.toast = function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 15px;background:#071824;border:1px solid rgba(255,255,255,.15);border-radius:999px;z-index:100";document.body.appendChild(e)}e.textContent=t;e.style.display="block";clearTimeout(window._tt);window._tt=setTimeout(()=>e.style.display="none",1800)}
 
 document.addEventListener("DOMContentLoaded",async()=>{
   activateNav();
@@ -1002,6 +1002,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
   renderParticipantCount();
   await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities(),renderFoodResponsibilities()]);
   initMobileMenu(); foodAddInit();expenseInit();ideasInit();privateBagInit();
+  if(window.BazTutorial){
+    BazTutorial.init({memberId:CURRENT_MEMBER.id,memberName:CURRENT_MEMBER.name,isAdmin:IS_ADMIN});
+  }
   await renderRecentChanges(); await renderAdminPanel();
 
   if(DBLIVE){

@@ -772,3 +772,96 @@ table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;text-align:rig
   .install-required-card{padding:21px 15px}
   .install-required-icon{width:104px;height:104px;border-radius:25px}
 }
+
+/* ===== Tutorial / onboarding ===== */
+.tutorial-overlay{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  padding:18px;
+  background:rgba(1,10,16,.76);
+  backdrop-filter:blur(9px);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s ease;
+}
+.tutorial-overlay.open{opacity:1;pointer-events:auto}
+body.tutorial-open{overflow:hidden}
+.tutorial-dialog{
+  width:min(520px,100%);
+  border-radius:28px;
+  padding:18px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(82,53,140,.28),transparent 35%),
+    #0b2633;
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 30px 90px rgba(0,0,0,.46);
+  text-align:center;
+}
+.tutorial-topline{
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:38px
+}
+.tutorial-step-label{
+  font-size:10px;color:var(--aqua);font-weight:900;
+  background:rgba(102,230,223,.08);
+  padding:6px 9px;border-radius:999px
+}
+.tutorial-close{
+  width:36px;height:36px;border:0;border-radius:11px;
+  background:rgba(255,255,255,.055);color:#fff;
+  font-size:24px;line-height:1;cursor:pointer
+}
+.tutorial-icon{
+  width:74px;height:74px;margin:8px auto 12px;
+  display:grid;place-items:center;border-radius:22px;
+  font-size:38px;
+  background:linear-gradient(145deg,rgba(82,53,140,.30),rgba(0,173,171,.14));
+  border:1px solid rgba(255,255,255,.09)
+}
+.tutorial-title{font-size:23px;margin:0 0 9px}
+.tutorial-body{
+  min-height:92px;color:#c5d4da;font-size:13px;line-height:1.9;
+  max-width:440px;margin:0 auto
+}
+.tutorial-body strong{color:#fff}
+.tutorial-progress{
+  display:flex;gap:5px;justify-content:center;
+  direction:ltr;margin:15px 0
+}
+.tutorial-progress span{
+  width:8px;height:8px;border-radius:99px;
+  background:rgba(255,255,255,.15);
+  transition:.2s
+}
+.tutorial-progress span.active{width:24px;background:var(--aqua)}
+.tutorial-progress span.done{background:rgba(102,230,223,.45)}
+.tutorial-actions{
+  display:grid;grid-template-columns:.75fr 1.25fr;gap:8px
+}
+.tutorial-actions .btn{width:100%;min-height:46px}
+.tutorial-skip{
+  margin-top:10px;border:0;background:transparent;color:#7f98a4;
+  font-family:inherit;font-size:10px;cursor:pointer;padding:6px 10px
+}
+.tutorial-help-fab{
+  position:fixed;z-index:135;
+  left:16px;bottom:16px;
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(11,38,51,.94);
+  color:#fff;font-size:19px;font-weight:900;
+  box-shadow:0 12px 32px rgba(0,0,0,.28);
+  cursor:pointer
+}
+@media(max-width:760px){
+  .tutorial-dialog{padding:16px;border-radius:23px}
+  .tutorial-title{font-size:20px}
+  .tutorial-body{font-size:12px;min-height:100px}
+  .tutorial-help-fab{
+    left:12px;bottom:12px;
+    width:42px;height:42px
+  }
+}
+
+/* installed app: keep help one tap away */
+.installed-pwa .tutorial-help-fab{display:grid}

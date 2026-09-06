@@ -32,7 +32,7 @@ window.AshqeyaInstall = (() => {
       <div class="install-dialog">
         <button class="install-close" aria-label="إغلاق">×</button>
         <div class="install-icon">📲</div>
-        <h3>نزّل «البز في الرحلة»</h3>
+        <h3>نزّل «البز في الرحلة V2»</h3>
         <p>على iPhone افتح الموقع في Safari، وبعدها:</p>
         <div class="install-steps">
           <div><b>1</b> اضغط زر المشاركة <span>⎋</span></div>
@@ -57,7 +57,7 @@ window.AshqeyaInstall = (() => {
       showIOSHelp();
       return;
     }
-    alert("من قائمة المتصفح اختار Install app أو Add to Home screen علشان تضيف «البز في الرحلة» على الموبايل.");
+    alert("من قائمة المتصفح اختار Install app أو Add to Home screen علشان تضيف «البز في الرحلة V2» على الموبايل.");
   }
   function init(){
     updateBtn();
@@ -74,10 +74,6 @@ window.AshqeyaInstall = (() => {
     if(btn) btn.onclick=install;
     const requiredBtn=document.getElementById("installRequiredBtn");
     if(requiredBtn) requiredBtn.onclick=install;
-
-    if("serviceWorker" in navigator){
-      navigator.serviceWorker.register("./service-worker.js").catch(console.warn);
-    }
   }
   return {init,install};
 })();
