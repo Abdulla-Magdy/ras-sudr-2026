@@ -23,7 +23,7 @@
         <input id="pinConfirm" class="text-input pin-input" inputmode="numeric" maxlength="4"
                placeholder="أكد الـ PIN" style="text-align:center;font-size:22px;letter-spacing:7px">
       </div>
-      <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">دخول</button>
+      <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">دخول</button><button id="forgotPinBtn" class="btn secondary" style="display:none;width:100%;margin-top:8px">نسيت الـPIN؟</button>
     </div>
 
     <div id="msg" class="notice" style="display:none;margin-top:12px"></div>
@@ -63,12 +63,26 @@ function pin4(v){ return /^\d{4}$/.test(v); }
       if(x.pin_set){
         $("#pinLabel").textContent="اكتب الـPIN بتاعك";
         $("#confirmWrap").style.display="none";
-        $("#loginBtn").textContent="دخول";
+        $("#loginBtn").textContent="دخول"; $("#forgotPinBtn").style.display="block";
       }else{
         $("#pinLabel").textContent="أول مرة؟ اختار PIN من 4 أرقام";
         $("#confirmWrap").style.display="block";
-        $("#loginBtn").textContent="ثبت الـPIN وادخل";
+        $("#loginBtn").textContent="ثبت الـPIN وادخل"; $("#forgotPinBtn").style.display="none";
       }
+    };
+
+
+    $("#forgotPinBtn").onclick=async()=>{
+      const x=choices.find(a=>a.id===$("#memberSelect").value);
+      if(!x) return message("اختار اسمك الأول.",true);
+      $("#forgotPinBtn").disabled=true;
+      try{
+        await TripDB.requestPinReset(x.id);
+        message("تمام ✅ اتبعت طلب Reset للأدمن. بعد ما بودا يعمله Reset هتقدر تختار PIN جديد.");
+      }catch(e){
+        message("حصلت مشكلة: "+(e.message||e),true);
+      }
+      $("#forgotPinBtn").disabled=false;
     };
 
     $("#loginBtn").onclick=async()=>{

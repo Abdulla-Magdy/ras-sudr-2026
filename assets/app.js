@@ -1,6 +1,6 @@
 
 const TRIP_DATE=new Date("2026-10-07T00:00:00+03:00"),$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-let DBLIVE=false, MEMBERS=[], CATEGORIES=[];
+let DBLIVE=false, MEMBERS=[], CATEGORIES=[], CURRENT_MEMBER=null, IS_ADMIN=false;
 
 function countdown(){if(!$("#days"))return;let x=Math.max(0,TRIP_DATE-new Date()),d=Math.floor(x/86400000),h=Math.floor(x%86400000/3600000),m=Math.floor(x%3600000/60000),s=Math.floor(x%60000/1000);$("#days").textContent=String(d).padStart(2,"0");$("#hours").textContent=String(h).padStart(2,"0");$("#minutes").textContent=String(m).padStart(2,"0");$("#seconds").textContent=String(s).padStart(2,"0")}
 setInterval(countdown,1000);countdown();
@@ -38,9 +38,9 @@ async function renderMeals(){
   if(!meals){meals=FALLBACK_DATA.meals.map((x,i)=>({id:String(i+1),day_no:x[0],title:x[1],details:x[2]}))}
   b.innerHTML=meals.map(m=>`<div class="card meal-card">
     <div class="pill">DAY ${m.day_no}</div>
-    <input class="text-input meal-title" data-id="${m.id}" value="${m.title||""}" style="margin:10px 0 8px">
-    <textarea class="textarea meal-details" data-id="${m.id}">${m.details||""}</textarea>
-    <div class="actions" style="margin-top:8px"><button class="btn save-meal" data-id="${m.id}">حفظ</button></div>
+    <input class="text-input meal-title" data-id="${m.id}" value="${m.title||""}" style="margin:10px 0 8px" ${IS_ADMIN?"":"disabled"}>
+    <textarea class="textarea meal-details" data-id="${m.id}" ${IS_ADMIN?"":"disabled"}>${m.details||""}</textarea>
+    ${IS_ADMIN?`<div class="actions" style="margin-top:8px"><button class="btn save-meal" data-id="${m.id}">حفظ</button></div>`:`<div class="muted" style="margin-top:8px;font-size:10px">التعديل للأدمن فقط</div>`}
   </div>`).join("");
   $$(".save-meal").forEach(btn=>btn.onclick=async()=>{
     let id=btn.dataset.id,title=$(`.meal-title[data-id="${id}"]`).value.trim(),details=$(`.meal-details[data-id="${id}"]`).value.trim();
@@ -61,12 +61,12 @@ async function renderFood(){
     if(!items) items=FALLBACK_DATA.food.map((x,i)=>({id:String(i+1),name:x[0],planned_qty:x[1],unit:x[2],actual_qty:"",purchased:false}));
   }
   b.innerHTML=items.map(x=>`<div class="edit-row">
-    <input class="text-input item-name" data-id="${x.id}" value="${x.name}">
-    <input class="qty-input planned" data-id="${x.id}" value="${x.planned_qty??""}" placeholder="المخطط">
-    <input class="text-input unit-in" data-id="${x.id}" value="${x.unit||""}" placeholder="الوحدة">
-    <input class="qty-input actual" data-id="${x.id}" value="${x.actual_qty??""}" placeholder="الفعلي">
-    <select class="select-input bought" data-id="${x.id}"><option value="false">لسه</option><option value="true" ${x.purchased?"selected":""}>اتجاب</option></select>
-    <button class="btn danger del-item" data-id="${x.id}">حذف</button>
+    <input class="text-input item-name" data-id="${x.id}" value="${x.name}" ${IS_ADMIN?"":"disabled"}>
+    <input class="qty-input planned" data-id="${x.id}" value="${x.planned_qty??""}" placeholder="المخطط" ${IS_ADMIN?"":"disabled"}>
+    <input class="text-input unit-in" data-id="${x.id}" value="${x.unit||""}" placeholder="الوحدة" ${IS_ADMIN?"":"disabled"}>
+    <input class="qty-input actual" data-id="${x.id}" value="${x.actual_qty??""}" placeholder="الفعلي" ${IS_ADMIN?"":"disabled"}>
+    <select class="select-input bought" data-id="${x.id}" ${IS_ADMIN?"":"disabled"}><option value="false">لسه</option><option value="true" ${x.purchased?"selected":""}>اتجاب</option></select>
+    ${IS_ADMIN?`<button class="btn danger del-item" data-id="${x.id}">حذف</button>`:""}
   </div>`).join("");
   $$(".edit-row input,.edit-row select").forEach(e=>e.onchange=async()=>saveItem(e.dataset.id,items));
   $$(".del-item").forEach(e=>e.onclick=async()=>{if(!confirm("تحذف الصنف؟"))return;if(DBLIVE)await TripDB.remove("shopping_items",e.dataset.id);else{items=items.filter(x=>x.id!==e.dataset.id);localStorage.setItem("localFood",JSON.stringify(items))}renderFood()});
@@ -79,6 +79,7 @@ async function saveItem(id,items){
 }
 async function foodAddInit(){
   let btn=$("#addFoodItem");if(!btn)return;
+  if(!IS_ADMIN){ const form=btn.closest(".inline-form"); if(form) form.style.display="none"; return; }
   btn.onclick=async()=>{
     let name=$("#newFoodName").value.trim(),qty=$("#newFoodQty").value.trim(),unit=$("#newFoodUnit").value.trim();
     if(!name)return;
@@ -96,14 +97,27 @@ async function renderResponsibilities(){
   let rs=DBLIVE?await TripDB.responsibilities():JSON.parse(localStorage.getItem("responsibilities")||"{}");
   let map={};
   if(DBLIVE) rs.forEach(x=>map[x.category_id]=x.member_id); else map=rs;
-  b.innerHTML=CATEGORIES.map(c=>`<div class="card"><div class="section-title"><h3>${c.name}</h3></div><select class="select-input resp" data-cat="${c.id}"><option value="">مين هيمسكها؟</option>${memberOptions()}</select></div>`).join("");
-  $$(".resp").forEach(s=>{s.value=map[s.dataset.cat]||"";s.onchange=async()=>{if(DBLIVE)await TripDB.upsertResponsibility(s.dataset.cat,s.value||null);else{let o=JSON.parse(localStorage.getItem("responsibilities")||"{}");s.value?o[s.dataset.cat]=s.value:delete o[s.dataset.cat];localStorage.setItem("responsibilities",JSON.stringify(o))}toast("المسؤولية اتحدثت ✅")}});
+  b.innerHTML=CATEGORIES.map(c=>{
+    const current=map[c.id]||"";
+    const options=IS_ADMIN?memberOptions():`<option value="${CURRENT_MEMBER.id}">${CURRENT_MEMBER.name}</option>`;
+    const canEdit=IS_ADMIN || !current || current===CURRENT_MEMBER.id;
+    return `<div class="card"><div class="section-title"><h3>${c.name}</h3></div><select class="select-input resp" data-cat="${c.id}" ${canEdit?"":"disabled"}><option value="">${current?"سيب المسؤولية":"خد المسؤولية"}</option>${options}</select>${!canEdit?'<div class="muted" style="font-size:10px;margin-top:7px">مسؤول عنها عضو تاني</div>':""}</div>`;
+  }).join("");
+  $$(".resp").forEach(s=>{s.value=map[s.dataset.cat]||"";s.onchange=async()=>{
+    const wanted=s.value||null;
+    if(!IS_ADMIN && wanted && wanted!==CURRENT_MEMBER.id){ toast("تقدر تختار نفسك بس"); return; }
+    await TripDB.upsertResponsibility(s.dataset.cat,wanted); toast("المسؤولية اتحدثت ✅");
+  }});
 }
 
 async function expenseInit(){
   if(!$("#expenseCategory"))return;
   $("#expenseCategory").innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
-  $("#expensePayer").innerHTML=memberOptions();
+  if(IS_ADMIN){ $("#expensePayer").innerHTML=memberOptions(); }
+  else{
+    $("#expensePayer").innerHTML=`<option value="${CURRENT_MEMBER.id}">${CURRENT_MEMBER.name}</option>`;
+    $("#expensePayer").value=CURRENT_MEMBER.id; $("#expensePayer").disabled=true;
+  }
   $("#addExpense").onclick=async()=>{
     let row={category_id:$("#expenseCategory").value,payer_member_id:$("#expensePayer").value,amount:Number($("#expenseAmount").value||0),note:$("#expenseNote").value.trim()};
     if(!row.amount)return;
@@ -115,7 +129,7 @@ async function renderExpenses(){
   let b=$("#expenseList");if(!b)return;
   let arr=DBLIVE?await TripDB.list("expenses",{order:"created_at",asc:false}):JSON.parse(localStorage.getItem("tripExpenses")||"[]");
   let mn=Object.fromEntries(MEMBERS.map(m=>[m.id,m.name])),cn=Object.fromEntries(CATEGORIES.map(c=>[c.id,c.name]));
-  b.innerHTML=arr.length?arr.map(x=>`<div class="expense-row"><div>${cn[x.category_id]||"—"}</div><div>${mn[x.payer_member_id]||"—"}</div><div>${Number(x.amount).toLocaleString()} ج</div><div class="wide muted">${x.note||"—"}</div><button class="btn danger expense-del" data-id="${x.id}">حذف</button></div>`).join(""):`<div class="muted">لسه مفيش مصاريف.</div>`;
+  b.innerHTML=arr.length?arr.map(x=>`<div class="expense-row"><div>${cn[x.category_id]||"—"}</div><div>${mn[x.payer_member_id]||"—"}</div><div>${Number(x.amount).toLocaleString()} ج</div><div class="wide muted">${x.note||"—"}</div>${(IS_ADMIN||x.payer_member_id===CURRENT_MEMBER.id)?`<button class="btn danger expense-del" data-id="${x.id}">حذف</button>`:""}</div>`).join(""):`<div class="muted">لسه مفيش مصاريف.</div>`;
   $$(".expense-del").forEach(e=>e.onclick=async()=>{if(DBLIVE)await TripDB.remove("expenses",e.dataset.id);else{arr=arr.filter(x=>x.id!==e.dataset.id);localStorage.setItem("tripExpenses",JSON.stringify(arr))}renderExpenses()});
   let total=arr.reduce((s,x)=>s+Number(x.amount||0),0),target=8;$("#totalExpense").textContent=total.toLocaleString()+" ج";$("#shareExpense").textContent=(total/target).toLocaleString(undefined,{maximumFractionDigits:0})+" ج";
   let totals={};MEMBERS.forEach(m=>totals[m.id]=0);arr.forEach(x=>totals[x.payer_member_id]=(totals[x.payer_member_id]||0)+Number(x.amount||0));
@@ -124,13 +138,40 @@ async function renderExpenses(){
 
 async function ideasInit(){
   if(!$("#ideaInput"))return;
-  $("#addIdea").onclick=async()=>{let body=$("#ideaInput").value.trim();if(!body)return;if(DBLIVE)await TripDB.insert("ideas",{body});else{let a=JSON.parse(localStorage.getItem("tripIdeas")||"[]");a.push({id:"l"+Date.now(),body});localStorage.setItem("tripIdeas",JSON.stringify(a))}$("#ideaInput").value="";renderIdeas()};
+  $("#addIdea").onclick=async()=>{let body=$("#ideaInput").value.trim();if(!body)return;if(DBLIVE)await TripDB.insert("ideas",{body,member_id:CURRENT_MEMBER.id});else{let a=JSON.parse(localStorage.getItem("tripIdeas")||"[]");a.push({id:"l"+Date.now(),body});localStorage.setItem("tripIdeas",JSON.stringify(a))}$("#ideaInput").value="";renderIdeas()};
   renderIdeas();
 }
 async function renderIdeas(){
   let b=$("#ideasList");if(!b)return;
   let a=DBLIVE?await TripDB.list("ideas",{order:"created_at",asc:false}):JSON.parse(localStorage.getItem("tripIdeas")||"[]");
-  b.innerHTML=a.length?a.map(x=>`<div class="card">${x.body}</div>`).join(""):`<div class="muted">لسه مفيش اقتراحات.</div>`;
+  let mn=Object.fromEntries(MEMBERS.map(m=>[m.id,m.name]));
+  b.innerHTML=a.length?a.map(x=>`<div class="card"><div>${x.body}</div><div class="muted" style="font-size:10px;margin-top:7px">— ${mn[x.member_id]||"الأشقياء"}</div>${(IS_ADMIN||x.member_id===CURRENT_MEMBER.id)?`<button class="btn danger idea-del" data-id="${x.id}" style="margin-top:9px">حذف</button>`:""}</div>`).join(""):`<div class="muted">لسه مفيش اقتراحات.</div>`;
+  $$(".idea-del").forEach(btn=>btn.onclick=async()=>{ await TripDB.remove("ideas",btn.dataset.id); renderIdeas(); });
+}
+
+
+async function renderAdminPanel(){
+  const panel=$("#adminPanel"); if(!panel || !IS_ADMIN) return;
+  panel.style.display="block";
+  const reqs=await TripDB.adminResetRequests();
+  const rb=$("#resetRequests");
+  rb.innerHTML=reqs.length?`<h3>طلبات نسيت الـPIN</h3>`+reqs.map(r=>`
+    <div class="admin-row"><div><strong>${r.name}</strong><div class="muted" style="font-size:10px">${new Date(r.requested_at).toLocaleString("ar-EG")}</div></div>
+    <button class="btn reset-pin" data-id="${r.member_id}">Reset PIN</button></div>`).join(""):`<div class="muted">مفيش طلبات Reset معلقة.</div>`;
+
+  const all=await TripDB.adminMembers();
+  $("#adminMembers").innerHTML=all.map(m=>`
+    <div class="admin-row"><div><strong>${m.name}</strong> ${m.access_role==="admin"?'<span class="pill">ADMIN</span>':""}
+    <div class="muted" style="font-size:10px">${m.pin_set?"PIN متسجل":"لسه معملش PIN"}</div></div>
+    ${m.pin_set?`<button class="btn secondary reset-pin" data-id="${m.id}">Reset PIN</button>`:""}</div>`).join("");
+
+  $$(".reset-pin").forEach(btn=>btn.onclick=async()=>{
+    const target=MEMBERS.find(m=>m.id===btn.dataset.id)?.name||"العضو";
+    if(!confirm(`تعمل Reset للـPIN بتاع ${target}؟`)) return;
+    await TripDB.adminResetPin(btn.dataset.id);
+    toast("تم Reset الـPIN ✅");
+    await renderAdminPanel();
+  });
 }
 
 async function renderRecentChanges(){
@@ -159,17 +200,17 @@ document.addEventListener("DOMContentLoaded",async()=>{
 
   DBLIVE=true;
   setDbState();
-  let m=TripDB.getMember();
+  let m=TripDB.getMember(); CURRENT_MEMBER=m; IS_ADMIN=TripDB.isAdmin();
   let bar=$("#userBar");
   if(bar){
-    bar.innerHTML=`<span class="member-chip">👤 ${m.name}</span><button id="switchMember" class="btn secondary">تغيير العضو</button>`;
+    bar.innerHTML=`<span class="member-chip">👤 ${m.name}${IS_ADMIN?" 👑":""}</span><button id="switchMember" class="btn secondary">تغيير العضو</button>`;
     $("#switchMember").onclick=()=>TripDB.forgetDevice();
   }
 
   await loadCore();
   await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities()]);
   foodAddInit();expenseInit();ideasInit();
-  await renderRecentChanges();
+  await renderRecentChanges(); await renderAdminPanel();
 
   if(DBLIVE){
     ["meal_plan","shopping_items","responsibilities","expenses","ideas"].forEach(t=>TripDB.subscribe(t,()=>location.reload()));

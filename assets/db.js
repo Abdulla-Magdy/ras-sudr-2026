@@ -8,7 +8,6 @@ window.TripDB = (() => {
     const c=cfg();
     if(!c.url || !c.key || !window.supabase) return {configured:false};
     if(!client) client=window.supabase.createClient(c.url,c.key);
-
     let {data:{session}}=await client.auth.getSession();
     if(!session){
       const {data,error}=await client.auth.signInAnonymously();
@@ -31,7 +30,7 @@ window.TripDB = (() => {
 
     const {data:m,error:me}=await client.rpc("get_my_trip_member");
     if(me) throw me;
-    member = Array.isArray(m) ? (m[0]||null) : m;
+    member=Array.isArray(m)?(m[0]||null):m;
     return {configured:true,bound:!!member,trip,member};
   }
 
@@ -39,18 +38,40 @@ window.TripDB = (() => {
     await ensureAnonSession();
     const {data,error}=await client.rpc("list_trip_members_for_login",{p_trip_slug:cfg().tripSlug});
     if(error) throw error;
-    return data || [];
+    return data||[];
   }
 
   async function claimOrLogin(memberId,pin){
     await ensureAnonSession();
-    const {data,error}=await client.rpc("claim_or_login_trip_member",{
-      p_member_id:memberId,
-      p_pin:String(pin)
-    });
+    const {data,error}=await client.rpc("claim_or_login_trip_member",{p_member_id:memberId,p_pin:String(pin)});
     if(error) throw error;
-    member = Array.isArray(data) ? (data[0]||null) : data;
+    member=Array.isArray(data)?(data[0]||null):data;
     return member;
+  }
+
+  async function requestPinReset(memberId){
+    await ensureAnonSession();
+    const {error}=await client.rpc("request_pin_reset",{p_member_id:memberId});
+    if(error) throw error;
+    return true;
+  }
+
+  async function adminResetPin(memberId){
+    const {error}=await client.rpc("admin_reset_member_pin",{p_member_id:memberId});
+    if(error) throw error;
+    return true;
+  }
+
+  async function adminMembers(){
+    const {data,error}=await client.rpc("admin_list_members");
+    if(error) throw error;
+    return data||[];
+  }
+
+  async function adminResetRequests(){
+    const {data,error}=await client.rpc("admin_list_pin_reset_requests");
+    if(error) throw error;
+    return data||[];
   }
 
   async function forgetDevice(){
@@ -62,16 +83,14 @@ window.TripDB = (() => {
 
   function getMember(){ return member; }
   function isBound(){ return !!member; }
-  function tripId(){ return trip?.id || null; }
+  function isAdmin(){ return member?.access_role==="admin"; }
 
   async function list(table, opts={}){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     let sel=opts.select||"*";
-    if(table==="members" && sel==="*") sel="id,trip_id,name,role,joke,confirmed,sort_order";
+    if(table==="members" && sel==="*") sel="id,trip_id,name,role,joke,confirmed,sort_order,access_role";
     let q=client.from(table).select(sel);
-    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table)){
-      q=q.eq("trip_id",trip.id);
-    }
+    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table)) q=q.eq("trip_id",trip.id);
     if(opts.order) q=q.order(opts.order,{ascending:opts.asc!==false});
     const {data,error}=await q;
     if(error) throw error;
@@ -80,9 +99,7 @@ window.TripDB = (() => {
 
   async function insert(table,row){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
-    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table) && !row.trip_id){
-      row.trip_id=trip.id;
-    }
+    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas"].includes(table) && !row.trip_id) row.trip_id=trip.id;
     const {data,error}=await client.from(table).insert(row).select().single();
     if(error) throw error;
     return data;
@@ -106,7 +123,7 @@ window.TripDB = (() => {
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {data,error}=await client.from("responsibilities").select("category_id,member_id");
     if(error) throw error;
-    return data || [];
+    return data||[];
   }
 
   async function upsertResponsibility(categoryId,memberId){
@@ -127,21 +144,20 @@ window.TripDB = (() => {
     if(!member) return [];
     const {data,error}=await client.from("change_log")
       .select("id,table_name,action,changed_at,member_id,members(name)")
-      .order("changed_at",{ascending:false})
-      .limit(limit);
-    if(error){ console.warn(error); return []; }
-    return data || [];
+      .order("changed_at",{ascending:false}).limit(limit);
+    if(error) return [];
+    return data||[];
   }
 
-  function subscribe(table, callback){
+  function subscribe(table,cb){
     if(!member) return null;
     return client.channel(`trip-${table}`)
-      .on("postgres_changes",{event:"*",schema:"public",table},callback)
-      .subscribe();
+      .on("postgres_changes",{event:"*",schema:"public",table},cb).subscribe();
   }
 
   return {
-    init,loginChoices,claimOrLogin,forgetDevice,getMember,isBound,tripId,
-    list,insert,update,remove,responsibilities,upsertResponsibility,recentChanges,subscribe
+    init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminResetRequests,
+    forgetDevice,getMember,isBound,isAdmin,list,insert,update,remove,responsibilities,
+    upsertResponsibility,recentChanges,subscribe
   };
 })();
