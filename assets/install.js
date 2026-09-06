@@ -15,6 +15,7 @@ window.AshqeyaInstall = (() => {
     if(!btn) return;
     if(isStandalone()) {
       btn.style.display="none";
+      const card=document.getElementById("firstInstallCard"); if(card) card.style.display="none";
       return;
     }
     btn.style.display="inline-flex";
@@ -29,7 +30,7 @@ window.AshqeyaInstall = (() => {
       <div class="install-dialog">
         <button class="install-close" aria-label="إغلاق">×</button>
         <div class="install-icon">📲</div>
-        <h3>نزّل تطبيق الأشقياء</h3>
+        <h3>نزّل «البز في الرحلة»</h3>
         <p>على iPhone افتح الموقع في Safari، وبعدها:</p>
         <div class="install-steps">
           <div><b>1</b> اضغط زر المشاركة <span>⎋</span></div>
@@ -54,7 +55,7 @@ window.AshqeyaInstall = (() => {
       showIOSHelp();
       return;
     }
-    alert("من قائمة المتصفح اختار Install app أو Add to Home screen.");
+    alert("من قائمة المتصفح اختار Install app أو Add to Home screen علشان تضيف «البز في الرحلة» على الموبايل.");
   }
   function init(){
     updateBtn();

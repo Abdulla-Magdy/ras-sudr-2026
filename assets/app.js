@@ -280,22 +280,115 @@ async function renderFoodResponsibilities(){
 }
 
 
+function shoppingItemMini(item){
+  return `<div class="shopping-mini ${item.purchased?"done":""}">
+    <div>
+      <strong>${item.name}</strong>
+      <span>${item.planned_qty??"—"} ${item.unit||""}</span>
+    </div>
+    <span class="status ${item.purchased?"done":"open"}">${item.purchased?"اتجاب ✓":"لسه"}</span>
+  </div>`;
+}
+
 async function renderResponsibilities(){
-  let b=$("#responsibilityGrid");if(!b)return;
-  let rs=DBLIVE?await TripDB.responsibilities():JSON.parse(localStorage.getItem("responsibilities")||"{}");
-  let map={};
-  if(DBLIVE) rs.forEach(x=>map[x.category_id]=x.member_id); else map=rs;
-  b.innerHTML=CATEGORIES.map(c=>{
-    const current=map[c.id]||"";
-    const options=IS_ADMIN?memberOptions():`<option value="${CURRENT_MEMBER.id}">${CURRENT_MEMBER.name}</option>`;
-    const canEdit=IS_ADMIN || !current || current===CURRENT_MEMBER.id;
-    const displayName=c.name==="الأكل"?"تنسيق الأكل":c.name; return `<div class="card"><div class="section-title"><h3>${displayName}</h3></div><select class="select-input resp" data-cat="${c.id}" ${canEdit?"":"disabled"}><option value="">${current?"سيب المسؤولية":"خد المسؤولية"}</option>${options}</select>${!canEdit?'<div class="muted" style="font-size:10px;margin-top:7px">مسؤول عنها عضو تاني</div>':""}</div>`;
-  }).join("");
-  $$(".resp").forEach(s=>{s.value=map[s.dataset.cat]||"";s.onchange=async()=>{
-    const wanted=s.value||null;
-    if(!IS_ADMIN && wanted && wanted!==CURRENT_MEMBER.id){ toast("تقدر تختار نفسك بس"); return; }
-    await TripDB.upsertResponsibility(s.dataset.cat,wanted); toast("المسؤولية اتحدثت ✅");
-  }});
+  if(!$("#shoppingByPerson") && !$("#myDutyList") && !$("#paymentsByCategory")) return;
+
+  const items=DBLIVE?await TripDB.list("shopping_items",{order:"sort_order"}):[];
+  const expenses=DBLIVE?await TripDB.list("expenses",{order:"created_at",asc:false}):[];
+
+  const memberMap=Object.fromEntries(MEMBERS.map(m=>[m.id,m]));
+  const categoryMap=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+
+  // 1) My actual shopping duties
+  const mine=items.filter(x=>x.responsible_member_id===CURRENT_MEMBER.id);
+  if($("#myDutyCount")) $("#myDutyCount").textContent=`${mine.length} ${mine.length===1?"حاجة":"حاجات"}`;
+  if($("#myDutyList")){
+    $("#myDutyList").innerHTML=mine.length
+      ? `<div class="my-duty-list">${mine.map(shoppingItemMini).join("")}</div>`
+      : `<div class="empty-finance">مفيش مشتريات متعيّنة عليك حاليًا 🎉</div>`;
+  }
+
+  // 2) Same shopping records grouped by member — no duplicate responsibility table
+  const assigned=items.filter(x=>x.responsible_member_id);
+  if($("#shoppingAssignmentCount")) $("#shoppingAssignmentCount").textContent=`${assigned.length} من ${items.length} متوزعين`;
+
+  if($("#shoppingByPerson")){
+    const groups=MEMBERS.map(m=>({
+      member:m,
+      items:items.filter(x=>x.responsible_member_id===m.id)
+    })).filter(g=>g.items.length);
+
+    $("#shoppingByPerson").innerHTML=groups.length?groups.map(g=>{
+      const done=g.items.filter(x=>x.purchased).length;
+      return `<article class="person-shopping-card">
+        <div class="person-shopping-head">
+          <div><strong>${g.member.name}</strong><small>${done}/${g.items.length} اتجابوا</small></div>
+          <span class="person-shopping-count">${g.items.length}</span>
+        </div>
+        <div class="person-shopping-items">
+          ${g.items.map(x=>`<span class="${x.purchased?"done":""}">${x.purchased?"✓ ":""}${x.name}</span>`).join("")}
+        </div>
+      </article>`;
+    }).join(""):`<div class="empty-finance">لسه المشتريات ما اتوزعتش على حد.</div>`;
+  }
+
+  // 3) Unassigned items — members can claim, admin can assign
+  const unassigned=items.filter(x=>!x.responsible_member_id);
+  if($("#unassignedCount")) $("#unassignedCount").textContent=unassigned.length.toLocaleString("ar-EG");
+  if($("#unassignedShopping")){
+    $("#unassignedShopping").innerHTML=unassigned.length?unassigned.map(x=>`
+      <article class="unassigned-item">
+        <div>
+          <strong>${x.name}</strong>
+          <small>${x.planned_qty??"—"} ${x.unit||""}</small>
+        </div>
+        <div class="unassigned-action">
+          ${IS_ADMIN?adminFoodOwnerSelect(x):`<button class="btn food-claim" data-id="${x.id}">أنا هجيب ده</button>`}
+        </div>
+      </article>`).join(""):`<div class="settled-all">✅ كل المشتريات متوزعة.</div>`;
+
+    $$("#unassignedShopping .food-owner-select").forEach(s=>s.onchange=async()=>{
+      await TripDB.update("shopping_items",s.dataset.id,{responsible_member_id:s.value||null});
+      toast("اتحدث مسؤول الشراء ✅");
+      renderResponsibilities(); renderFood();
+    });
+    $$("#unassignedShopping .food-claim").forEach(btn=>btn.onclick=async()=>{
+      try{
+        await TripDB.claimFoodItem(btn.dataset.id);
+        toast("بقيت مسؤول عن الصنف ✅");
+      }catch(e){
+        toast(String(e.message||e).includes("ITEM_ALREADY_ASSIGNED")?"حد أخده قبلك":"حصلت مشكلة");
+      }
+      renderResponsibilities(); renderFood();
+    });
+  }
+
+  // 4) Actual payments grouped by category, with multiple payers allowed naturally.
+  if($("#paymentsByCategory")){
+    const categories=CATEGORIES.map(c=>{
+      const rows=expenses.filter(e=>e.category_id===c.id);
+      const total=rows.reduce((s,e)=>s+Number(e.amount||0),0);
+      const perPayer={};
+      rows.forEach(e=>{
+        perPayer[e.payer_member_id]=(perPayer[e.payer_member_id]||0)+Number(e.amount||0);
+      });
+      return {category:c,rows,total,perPayer};
+    }).filter(x=>x.rows.length);
+
+    $("#paymentsByCategory").innerHTML=categories.length?categories.map(g=>`
+      <article class="payment-category-card">
+        <div class="payment-category-head">
+          <strong>${g.category.name}</strong>
+          <span>${money(g.total)}</span>
+        </div>
+        <div class="payment-payers">
+          ${Object.entries(g.perPayer).map(([id,amount])=>`
+            <div><span>${memberMap[id]?.name||"—"}</span><strong>${money(amount)}</strong></div>
+          `).join("")}
+        </div>
+      </article>
+    `).join(""):`<div class="empty-finance">لسه مفيش مصاريف مسجلة.</div>`;
+  }
 }
 
 async function expenseInit(){

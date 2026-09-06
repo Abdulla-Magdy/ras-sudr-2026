@@ -1,13 +1,13 @@
 {
-  "name": "الأشقياء | Ras Sudr 2026",
-  "short_name": "الأشقياء",
-  "description": "منظم رحلة الأشقياء إلى رأس سدر 2026",
+  "name": "البز في الرحلة | Ras Sudr 2026",
+  "short_name": "البز في الرحلة",
+  "description": "تطبيق الأشقياء لتنظيم رحلة رأس سدر 2026",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#140e26",
+  "background_color": "#071824",
   "theme_color": "#52358C",
   "icons": [
     {

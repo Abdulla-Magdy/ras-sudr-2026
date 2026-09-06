@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-ashqeya-v10";
+const CACHE_NAME = "ras-sudr-baz-v11";
 const CORE = [
   "./",
   "./index.html",
@@ -18,7 +18,8 @@ const CORE = [
   "./assets/supabase-config.js",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
-  "./assets/icons/apple-touch-icon.png"
+  "./assets/icons/apple-touch-icon.png",
+  "./assets/icons/app-icon-large.png"
 ];
 
 self.addEventListener("install", event => {
