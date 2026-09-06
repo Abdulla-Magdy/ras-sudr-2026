@@ -1,4 +1,17 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><link rel="stylesheet" href="assets/style.css"><title>المسؤوليات — Ras Sudr</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="الأشقياء"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"></head><body><header class="topbar"><div class="shell nav"><a class="brand" href="index.html"><span class="brand-mark">🌊</span><span>Ras Sudr Mission</span></a><nav class="links">
-<a href="index.html" data-page="index.html">الرئيسية</a><a href="food.html" data-page="food.html">الأكل</a><a href="responsibilities.html" data-page="responsibilities.html">المسؤوليات</a><a href="expenses.html" data-page="expenses.html">المصاريف</a><a href="crew.html" data-page="crew.html">الأشقياء</a><a href="ideas.html" data-page="ideas.html">الاقتراحات</a>
+<a href="index.html" data-page="index.html"><span class="nav-icon">🏠</span><span class="nav-label">الرئيسية</span></a><a href="food.html" data-page="food.html"><span class="nav-icon">🍳</span><span class="nav-label">الأكل</span></a><a href="responsibilities.html" data-page="responsibilities.html"><span class="nav-icon">🙋</span><span class="nav-label">مسؤوليات</span></a><a href="expenses.html" data-page="expenses.html"><span class="nav-icon">💰</span><span class="nav-label">مصاريف</span></a><a href="crew.html" data-page="crew.html"><span class="nav-icon">😎</span><span class="nav-label">الأشقياء</span></a><a href="ideas.html" data-page="ideas.html"><span class="nav-icon">💡</span><span class="nav-label">اقتراحات</span></a>
 </nav><button id="installAppBtn" class="install-app-btn">📲 نزّل التطبيق</button><span id="dbState" class="db-state">Shared Live</span><span id="userBar"></span></div></header>
-<main class="shell"><section class="hero"><div class="eyebrow">WHO'S GOT IT?</div><h1>المسؤوليات</h1><div class="subtitle">اختيار مسؤول لكل Category، وقابل للتغيير في أي وقت.</div></section><section class="section"><div id="responsibilityGrid" class="grid grid-3"></div></section></main><div class="footer">RESPONSIBILITIES • 2026</div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/supabase-config.js"></script><script src="assets/fallback-data.js"></script><script src="assets/db.js"></script><script src="assets/app.js"></script><script src="assets/install.js"></script></body></html>
+<main class="shell"><section class="hero"><div class="eyebrow">WHO'S GOT IT?</div><h1>المسؤوليات</h1><div class="subtitle">مسؤوليات عامة للرحلة، وتوزيع منفصل لمشتريات الأكل صنف بصنف.</div></section><section class="section">
+      <div class="section-title"><h2>المسؤوليات العامة</h2><small>الشاليه، البنزين، المشروبات...</small></div>
+      <div id="responsibilityGrid" class="grid grid-3"></div>
+    </section>
+    <section class="section">
+      <div class="card food-responsibility-section">
+        <div class="section-title">
+          <div><span class="pill">FOOD CREW</span><h2 style="margin-top:10px">مشتريات الأكل بالتفصيل</h2></div>
+          <small id="foodResponsibilityProgress">0 أصناف متوزعين</small>
+        </div>
+        <div class="notice">مثال: واحد يجيب العيش، واحد الفراخ، واحد الجبن... كل صنف له مسؤول مستقل.</div>
+        <div id="foodResponsibilityGrid" class="food-resp-list"></div>
+      </div>
+    </section></main><div class="footer">RESPONSIBILITIES • 2026</div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/supabase-config.js"></script><script src="assets/fallback-data.js"></script><script src="assets/db.js"></script><script src="assets/app.js"></script><script src="assets/install.js"></script></body></html>

@@ -1,9 +1,17 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><link rel="stylesheet" href="assets/style.css"><title>الأكل — Ras Sudr</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="الأشقياء"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"></head><body><header class="topbar"><div class="shell nav"><a class="brand" href="index.html"><span class="brand-mark">🌊</span><span>Ras Sudr Mission</span></a><nav class="links">
-<a href="index.html" data-page="index.html">الرئيسية</a><a href="food.html" data-page="food.html">الأكل</a><a href="responsibilities.html" data-page="responsibilities.html">المسؤوليات</a><a href="expenses.html" data-page="expenses.html">المصاريف</a><a href="crew.html" data-page="crew.html">الأشقياء</a><a href="ideas.html" data-page="ideas.html">الاقتراحات</a>
+<a href="index.html" data-page="index.html"><span class="nav-icon">🏠</span><span class="nav-label">الرئيسية</span></a><a href="food.html" data-page="food.html"><span class="nav-icon">🍳</span><span class="nav-label">الأكل</span></a><a href="responsibilities.html" data-page="responsibilities.html"><span class="nav-icon">🙋</span><span class="nav-label">مسؤوليات</span></a><a href="expenses.html" data-page="expenses.html"><span class="nav-icon">💰</span><span class="nav-label">مصاريف</span></a><a href="crew.html" data-page="crew.html"><span class="nav-icon">😎</span><span class="nav-label">الأشقياء</span></a><a href="ideas.html" data-page="ideas.html"><span class="nav-icon">💡</span><span class="nav-label">اقتراحات</span></a>
 </nav><button id="installAppBtn" class="install-app-btn">📲 نزّل التطبيق</button><span id="dbState" class="db-state">Shared Live</span><span id="userBar"></span></div></header>
 <main class="shell"><section class="hero"><div class="eyebrow">FOOD OPERATIONS</div><h1>الأكل</h1><div class="subtitle">غيّر الأكلات والكميات من نفس الصفحة كل ما الخطة تتغير.</div></section>
-<section class="section"><div class="section-title"><h2>خطة الـ3 أيام</h2><small>Editable</small></div><div id="mealGrid" class="grid grid-3"></div></section>
-<section class="section"><div class="card"><div class="toolbar"><div><h2 style="margin:0">Master Food List</h2><div class="muted" style="font-size:11px">مخطط / فعلي / اتجاب ولا لسه.</div></div></div>
-<div class="inline-form"><input id="newFoodName" class="text-input" placeholder="صنف جديد"><input id="newFoodQty" class="qty-input" placeholder="الكمية"><input id="newFoodUnit" class="text-input" placeholder="الوحدة"><button id="addFoodItem" class="btn">إضافة</button></div>
+<section class="section"><div class="section-title"><h2>خطة الـ3 أيام</h2><small>قابلة للتعديل</small></div><div id="mealGrid" class="grid grid-3"></div></section>
+<section class="section"><div class="card"><div class="toolbar"><div><h2 style="margin:0">Master Food List</h2><div class="muted" style="font-size:11px">الكميات + حالة الشراء + مين مسؤول عن كل صنف.</div></div></div>
+<details id="foodAddBox" class="add-food-details">
+      <summary>+ إضافة صنف جديد</summary>
+      <div class="inline-form">
+        <label class="mini-field"><span>الصنف</span><input id="newFoodName" class="text-input" placeholder="مثال: عيش بلدي"></label>
+        <label class="mini-field"><span>الكمية</span><input id="newFoodQty" class="qty-input" placeholder="60"></label>
+        <label class="mini-field"><span>الوحدة</span><input id="newFoodUnit" class="text-input" placeholder="رغيف"></label>
+        <button id="addFoodItem" class="btn">إضافة</button>
+      </div>
+    </details>
 <div id="foodBody" style="margin-top:14px"></div></div></section>
 <div class="notice">السعر لا يتسجل على الصنف؛ إجمالي الدفع يتسجل في صفحة المصاريف تحت Category الأكل.</div></main><div class="footer">FOOD OPS • 2026</div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/supabase-config.js"></script><script src="assets/fallback-data.js"></script><script src="assets/db.js"></script><script src="assets/app.js"></script><script src="assets/install.js"></script></body></html>

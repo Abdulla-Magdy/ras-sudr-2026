@@ -82,6 +82,7 @@ window.TripDB = (() => {
   }
 
   function getMember(){ return member; }
+  function getTrip(){ return trip; }
   function isBound(){ return !!member; }
   function isAdmin(){ return member?.access_role==="admin"; }
 
@@ -140,6 +141,21 @@ window.TripDB = (() => {
     return data;
   }
 
+
+  async function claimFoodItem(itemId){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("claim_food_item",{p_item_id:itemId});
+    if(error) throw error;
+    return data;
+  }
+
+  async function releaseFoodItem(itemId){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("release_food_item",{p_item_id:itemId});
+    if(error) throw error;
+    return data;
+  }
+
   async function recentChanges(limit=12){
     if(!member) return [];
     const {data,error}=await client.from("change_log")
@@ -157,7 +173,7 @@ window.TripDB = (() => {
 
   return {
     init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminResetRequests,
-    forgetDevice,getMember,isBound,isAdmin,list,insert,update,remove,responsibilities,
-    upsertResponsibility,recentChanges,subscribe
+    forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
+    upsertResponsibility,claimFoodItem,releaseFoodItem,recentChanges,subscribe
   };
 })();

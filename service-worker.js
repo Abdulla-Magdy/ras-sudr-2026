@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-ashqeya-v4";
+const CACHE_NAME = "ras-sudr-ashqeya-v7";
 const CORE = [
   "./",
   "./index.html",

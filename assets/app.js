@@ -27,9 +27,25 @@ async function renderHomeMeals(){
   b.innerHTML=meals.map(m=>`<p class="muted"><strong>${m.title}:</strong> ${m.details||"لسه بيتحدد"}</p>`).join("");
 }
 
+function confirmedMembers(){ return MEMBERS.filter(m=>m.confirmed!==false); }
+
+function renderParticipantCount(){
+  const count=confirmedMembers().length;
+  if($("#participantCount")) $("#participantCount").textContent=count.toLocaleString("ar-EG");
+  if($("#participantCountText")) $("#participantCountText").textContent=`${count} مؤكدين حاليًا`;
+}
+
 async function renderCrew(){
   let b=$("#crewGrid");if(!b)return;
-  b.innerHTML=MEMBERS.map(c=>`<div class="card crew-card"><div class="crew-name">${c.name}</div><div class="crew-role">${c.role||""}</div><div class="crew-joke">${c.joke||""}</div></div>`).join("");
+  b.innerHTML=MEMBERS.map(c=>`<div class="card crew-card ${c.confirmed===false?"crew-inactive":""}">
+    <div class="crew-card-top">
+      <div class="crew-name">${c.name}</div>
+      <span class="trip-status ${c.confirmed===false?"off":"on"}">${c.confirmed===false?"مش داخل القسمة":"طالع ✓"}</span>
+    </div>
+    <div class="crew-role">${c.role||""}</div>
+    <div class="crew-joke">${c.joke||""}</div>
+  </div>`).join("");
+  renderParticipantCount();
 }
 
 async function renderMeals(){
@@ -52,45 +68,217 @@ async function renderMeals(){
   });
 }
 
+
+function foodResponsibleName(id){
+  return MEMBERS.find(m=>m.id===id)?.name || "";
+}
+function foodResponsibilityBadge(item){
+  if(!item.responsible_member_id) return `<span class="food-owner-badge open">لسه من غير مسؤول</span>`;
+  const mine=item.responsible_member_id===CURRENT_MEMBER.id;
+  return `<span class="food-owner-badge ${mine?"mine":"assigned"}">${mine?"أنا مسؤول":"مسؤول: "+foodResponsibleName(item.responsible_member_id)}</span>`;
+}
+function foodMemberAction(item){
+  if(IS_ADMIN) return "";
+  if(!item.responsible_member_id){
+    return `<button class="btn food-claim" data-id="${item.id}">أنا هجيب ده</button>`;
+  }
+  if(item.responsible_member_id===CURRENT_MEMBER.id){
+    return `<button class="btn secondary food-release" data-id="${item.id}">سيب المسؤولية</button>`;
+  }
+  return "";
+}
+function adminFoodOwnerSelect(item){
+  if(!IS_ADMIN) return "";
+  return `<label class="mini-field"><span>مسؤول الشراء</span>
+    <select class="select-input food-owner-select" data-id="${item.id}">
+      <option value="">غير محدد</option>
+      ${MEMBERS.map(m=>`<option value="${m.id}" ${item.responsible_member_id===m.id?"selected":""}>${m.name}</option>`).join("")}
+    </select>
+  </label>`;
+}
+
 async function renderFood(){
   let b=$("#foodBody");if(!b)return;
   let items;
   if(DBLIVE) items=await TripDB.list("shopping_items",{order:"sort_order"});
   else{
     items=JSON.parse(localStorage.getItem("localFood")||"null");
-    if(!items) items=FALLBACK_DATA.food.map((x,i)=>({id:String(i+1),name:x[0],planned_qty:x[1],unit:x[2],actual_qty:"",purchased:false}));
+    if(!items) items=FALLBACK_DATA.food.map((x,i)=>({id:String(i+1),name:x[0],planned_qty:x[1],unit:x[2],actual_qty:"",purchased:false,responsible_member_id:null}));
   }
-  b.innerHTML=items.map(x=>`<div class="edit-row">
-    <input class="text-input item-name" data-id="${x.id}" value="${x.name}" ${IS_ADMIN?"":"disabled"}>
-    <input class="qty-input planned" data-id="${x.id}" value="${x.planned_qty??""}" placeholder="المخطط" ${IS_ADMIN?"":"disabled"}>
-    <input class="text-input unit-in" data-id="${x.id}" value="${x.unit||""}" placeholder="الوحدة" ${IS_ADMIN?"":"disabled"}>
-    <input class="qty-input actual" data-id="${x.id}" value="${x.actual_qty??""}" placeholder="الفعلي" ${IS_ADMIN?"":"disabled"}>
-    <select class="select-input bought" data-id="${x.id}" ${IS_ADMIN?"":"disabled"}><option value="false">لسه</option><option value="true" ${x.purchased?"selected":""}>اتجاب</option></select>
-    ${IS_ADMIN?`<button class="btn danger del-item" data-id="${x.id}">حذف</button>`:""}
-  </div>`).join("");
-  $$(".edit-row input,.edit-row select").forEach(e=>e.onchange=async()=>saveItem(e.dataset.id,items));
-  $$(".del-item").forEach(e=>e.onclick=async()=>{if(!confirm("تحذف الصنف؟"))return;if(DBLIVE)await TripDB.remove("shopping_items",e.dataset.id);else{items=items.filter(x=>x.id!==e.dataset.id);localStorage.setItem("localFood",JSON.stringify(items))}renderFood()});
+
+  b.innerHTML=items.length?items.map(x=>`
+    <article class="food-item-card ${x.purchased?"purchased":""}">
+      <div class="food-item-head">
+        <div>
+          <div class="food-item-name">${x.name}</div>
+          <div class="food-item-meta">
+            <span>المخطط: <strong>${x.planned_qty??"—"} ${x.unit||""}</strong></span>
+            ${x.actual_qty!==null && x.actual_qty!==""?`<span>الفعلي: <strong>${x.actual_qty} ${x.unit||""}</strong></span>`:""}
+          </div>
+        </div>
+        <div class="food-head-badges">
+          ${foodResponsibilityBadge(x)}
+          <span class="status ${x.purchased?"done":"open"}">${x.purchased?"اتجاب ✓":"لسه"}</span>
+        </div>
+      </div>
+
+      <div class="food-responsibility-action">
+        ${foodMemberAction(x)}
+        ${adminFoodOwnerSelect(x)}
+      </div>
+
+      ${IS_ADMIN?`
+      <details class="food-edit-details">
+        <summary>تعديل الصنف والكميات</summary>
+        <div class="food-edit-grid">
+          <label class="mini-field"><span>الصنف</span><input class="text-input item-name" data-id="${x.id}" value="${x.name}"></label>
+          <label class="mini-field"><span>المخطط</span><input class="qty-input planned" data-id="${x.id}" value="${x.planned_qty??""}"></label>
+          <label class="mini-field"><span>الوحدة</span><input class="text-input unit-in" data-id="${x.id}" value="${x.unit||""}"></label>
+          <label class="mini-field"><span>الفعلي</span><input class="qty-input actual" data-id="${x.id}" value="${x.actual_qty??""}"></label>
+          <label class="mini-field"><span>الحالة</span>
+            <select class="select-input bought" data-id="${x.id}">
+              <option value="false">لسه</option>
+              <option value="true" ${x.purchased?"selected":""}>اتجاب</option>
+            </select>
+          </label>
+          <button class="btn danger del-item" data-id="${x.id}">حذف الصنف</button>
+        </div>
+      </details>`:""}
+    </article>
+  `).join(""):`<div class="empty-finance">لسه مفيش أصناف في قائمة الشراء.</div>`;
+
+  $$(".food-edit-details input,.food-edit-details select").forEach(e=>{
+    e.onchange=async()=>saveItem(e.dataset.id,items);
+  });
+  $$(".del-item").forEach(e=>e.onclick=async()=>{
+    if(!confirm("تحذف الصنف؟"))return;
+    if(DBLIVE)await TripDB.remove("shopping_items",e.dataset.id);
+    else{
+      items=items.filter(x=>x.id!==e.dataset.id);
+      localStorage.setItem("localFood",JSON.stringify(items));
+    }
+    renderFood();
+    renderFoodResponsibilities();
+  });
+
+  $$(".food-owner-select").forEach(s=>s.onchange=async()=>{
+    await TripDB.update("shopping_items",s.dataset.id,{responsible_member_id:s.value||null});
+    toast("مسؤول الشراء اتحدث ✅");
+    renderFood();
+    renderFoodResponsibilities();
+  });
+
+  $$(".food-claim").forEach(btn=>btn.onclick=async()=>{
+    try{
+      await TripDB.claimFoodItem(btn.dataset.id);
+      toast("بقيت مسؤول عن الصنف ✅");
+      renderFood();
+      renderFoodResponsibilities();
+    }catch(e){
+      const msg=String(e.message||e);
+      toast(msg.includes("ITEM_ALREADY_ASSIGNED")?"الصنف حد أخده قبلك":"حصلت مشكلة");
+      renderFood();
+    }
+  });
+
+  $$(".food-release").forEach(btn=>btn.onclick=async()=>{
+    await TripDB.releaseFoodItem(btn.dataset.id);
+    toast("سيبت المسؤولية");
+    renderFood();
+    renderFoodResponsibilities();
+  });
 }
+
 async function saveItem(id,items){
-  let patch={name:$(`.item-name[data-id="${id}"]`).value.trim(),planned_qty:$(`.planned[data-id="${id}"]`).value||null,unit:$(`.unit-in[data-id="${id}"]`).value.trim(),actual_qty:$(`.actual[data-id="${id}"]`).value||null,purchased:$(`.bought[data-id="${id}"]`).value==="true"};
+  let patch={
+    name:$(`.item-name[data-id="${id}"]`)?.value.trim()||"",
+    planned_qty:$(`.planned[data-id="${id}"]`)?.value||null,
+    unit:$(`.unit-in[data-id="${id}"]`)?.value.trim()||"",
+    actual_qty:$(`.actual[data-id="${id}"]`)?.value||null,
+    purchased:$(`.bought[data-id="${id}"]`)?.value==="true"
+  };
   if(DBLIVE) await TripDB.update("shopping_items",id,patch);
-  else{items=items.map(x=>x.id===id?{...x,...patch}:x);localStorage.setItem("localFood",JSON.stringify(items))}
+  else{
+    items=items.map(x=>x.id===id?{...x,...patch}:x);
+    localStorage.setItem("localFood",JSON.stringify(items));
+  }
   toast("اتحفظ ✅");
+  renderFood();
 }
+
 async function foodAddInit(){
   let btn=$("#addFoodItem");if(!btn)return;
-  if(!IS_ADMIN){ const form=btn.closest(".inline-form"); if(form) form.style.display="none"; return; }
+  if(!IS_ADMIN){
+    const box=$("#foodAddBox");
+    if(box) box.style.display="none";
+    return;
+  }
   btn.onclick=async()=>{
     let name=$("#newFoodName").value.trim(),qty=$("#newFoodQty").value.trim(),unit=$("#newFoodUnit").value.trim();
     if(!name)return;
-    if(DBLIVE) await TripDB.insert("shopping_items",{category_id:CATEGORIES.find(c=>c.name==="الأكل")?.id||null,name,planned_qty:qty||null,unit,sort_order:999});
-    else{
-      let arr=JSON.parse(localStorage.getItem("localFood")||"null")||FALLBACK_DATA.food.map((x,i)=>({id:String(i+1),name:x[0],planned_qty:x[1],unit:x[2],actual_qty:"",purchased:false}));
-      arr.push({id:"l"+Date.now(),name,planned_qty:qty,unit,actual_qty:"",purchased:false});localStorage.setItem("localFood",JSON.stringify(arr));
-    }
-    $("#newFoodName").value=$("#newFoodQty").value=$("#newFoodUnit").value="";renderFood();
+    if(DBLIVE) await TripDB.insert("shopping_items",{
+      category_id:CATEGORIES.find(c=>c.name==="الأكل")?.id||null,
+      name,planned_qty:qty||null,unit,sort_order:999
+    });
+    $("#newFoodName").value=$("#newFoodQty").value=$("#newFoodUnit").value="";
+    renderFood();
+    renderFoodResponsibilities();
   }
 }
+
+async function renderFoodResponsibilities(){
+  const b=$("#foodResponsibilityGrid"); if(!b) return;
+  const items=DBLIVE?await TripDB.list("shopping_items",{order:"sort_order"}):[];
+  if(!items.length){
+    b.innerHTML='<div class="empty-finance">أضف أصناف من صفحة الأكل الأول.</div>';
+    return;
+  }
+
+  const assigned=items.filter(x=>x.responsible_member_id).length;
+  if($("#foodResponsibilityProgress")){
+    $("#foodResponsibilityProgress").textContent=`${assigned} من ${items.length} أصناف متوزعين`;
+  }
+
+  b.innerHTML=items.map(x=>`
+    <article class="food-resp-card">
+      <div class="food-resp-main">
+        <div class="food-resp-icon">${x.purchased?"✅":"🛒"}</div>
+        <div>
+          <strong>${x.name}</strong>
+          <div class="muted">${x.planned_qty??"—"} ${x.unit||""}</div>
+        </div>
+      </div>
+      <div class="food-resp-owner">
+        ${foodResponsibilityBadge(x)}
+        ${IS_ADMIN?adminFoodOwnerSelect(x):foodMemberAction(x)}
+      </div>
+    </article>
+  `).join("");
+
+  $$("#foodResponsibilityGrid .food-owner-select").forEach(s=>s.onchange=async()=>{
+    await TripDB.update("shopping_items",s.dataset.id,{responsible_member_id:s.value||null});
+    toast("اتحدثت مسؤولية الصنف ✅");
+    renderFoodResponsibilities();
+    renderFood();
+  });
+  $$("#foodResponsibilityGrid .food-claim").forEach(btn=>btn.onclick=async()=>{
+    try{
+      await TripDB.claimFoodItem(btn.dataset.id);
+      toast("بقيت مسؤول عن الصنف ✅");
+    }catch(e){
+      toast(String(e.message||e).includes("ITEM_ALREADY_ASSIGNED")?"الصنف حد أخده قبلك":"حصلت مشكلة");
+    }
+    renderFoodResponsibilities();
+    renderFood();
+  });
+  $$("#foodResponsibilityGrid .food-release").forEach(btn=>btn.onclick=async()=>{
+    await TripDB.releaseFoodItem(btn.dataset.id);
+    toast("سيبت المسؤولية");
+    renderFoodResponsibilities();
+    renderFood();
+  });
+}
+
 
 async function renderResponsibilities(){
   let b=$("#responsibilityGrid");if(!b)return;
@@ -101,7 +289,7 @@ async function renderResponsibilities(){
     const current=map[c.id]||"";
     const options=IS_ADMIN?memberOptions():`<option value="${CURRENT_MEMBER.id}">${CURRENT_MEMBER.name}</option>`;
     const canEdit=IS_ADMIN || !current || current===CURRENT_MEMBER.id;
-    return `<div class="card"><div class="section-title"><h3>${c.name}</h3></div><select class="select-input resp" data-cat="${c.id}" ${canEdit?"":"disabled"}><option value="">${current?"سيب المسؤولية":"خد المسؤولية"}</option>${options}</select>${!canEdit?'<div class="muted" style="font-size:10px;margin-top:7px">مسؤول عنها عضو تاني</div>':""}</div>`;
+    const displayName=c.name==="الأكل"?"تنسيق الأكل":c.name; return `<div class="card"><div class="section-title"><h3>${displayName}</h3></div><select class="select-input resp" data-cat="${c.id}" ${canEdit?"":"disabled"}><option value="">${current?"سيب المسؤولية":"خد المسؤولية"}</option>${options}</select>${!canEdit?'<div class="muted" style="font-size:10px;margin-top:7px">مسؤول عنها عضو تاني</div>':""}</div>`;
   }).join("");
   $$(".resp").forEach(s=>{s.value=map[s.dataset.cat]||"";s.onchange=async()=>{
     const wanted=s.value||null;
@@ -125,15 +313,194 @@ async function expenseInit(){
     $("#expenseAmount").value="";$("#expenseNote").value="";renderExpenses();
   };renderExpenses();
 }
+function money(v){
+  const n=Number(v||0);
+  return new Intl.NumberFormat("ar-EG",{minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:2}).format(n)+" ج";
+}
+function balanceBadge(net){
+  const eps=.005;
+  if(net>eps) return `<span class="balance-badge credit">له ${money(net)}</span>`;
+  if(net<-eps) return `<span class="balance-badge debt">عليه ${money(Math.abs(net))}</span>`;
+  return `<span class="balance-badge settled">خالص ✓</span>`;
+}
+function buildTransfers(people){
+  const eps=.005;
+  let creditors=people.filter(p=>p.net>eps).map(p=>({...p,remaining:p.net}));
+  let debtors=people.filter(p=>p.net<-eps).map(p=>({...p,remaining:Math.abs(p.net)}));
+  const transfers=[];
+  let c=0,d=0;
+  while(c<creditors.length && d<debtors.length){
+    const amount=Math.min(creditors[c].remaining,debtors[d].remaining);
+    if(amount>eps){
+      transfers.push({from:debtors[d],to:creditors[c],amount});
+      creditors[c].remaining-=amount;
+      debtors[d].remaining-=amount;
+    }
+    if(creditors[c].remaining<=eps)c++;
+    if(debtors[d].remaining<=eps)d++;
+  }
+  return transfers;
+}
+
 async function renderExpenses(){
   let b=$("#expenseList");if(!b)return;
   let arr=DBLIVE?await TripDB.list("expenses",{order:"created_at",asc:false}):JSON.parse(localStorage.getItem("tripExpenses")||"[]");
-  let mn=Object.fromEntries(MEMBERS.map(m=>[m.id,m.name])),cn=Object.fromEntries(CATEGORIES.map(c=>[c.id,c.name]));
-  b.innerHTML=arr.length?arr.map(x=>`<div class="expense-row"><div>${cn[x.category_id]||"—"}</div><div>${mn[x.payer_member_id]||"—"}</div><div>${Number(x.amount).toLocaleString()} ج</div><div class="wide muted">${x.note||"—"}</div>${(IS_ADMIN||x.payer_member_id===CURRENT_MEMBER.id)?`<button class="btn danger expense-del" data-id="${x.id}">حذف</button>`:""}</div>`).join(""):`<div class="muted">لسه مفيش مصاريف.</div>`;
-  $$(".expense-del").forEach(e=>e.onclick=async()=>{if(DBLIVE)await TripDB.remove("expenses",e.dataset.id);else{arr=arr.filter(x=>x.id!==e.dataset.id);localStorage.setItem("tripExpenses",JSON.stringify(arr))}renderExpenses()});
-  let total=arr.reduce((s,x)=>s+Number(x.amount||0),0),target=8;$("#totalExpense").textContent=total.toLocaleString()+" ج";$("#shareExpense").textContent=(total/target).toLocaleString(undefined,{maximumFractionDigits:0})+" ج";
-  let totals={};MEMBERS.forEach(m=>totals[m.id]=0);arr.forEach(x=>totals[x.payer_member_id]=(totals[x.payer_member_id]||0)+Number(x.amount||0));
-  $("#payerTotals").innerHTML=MEMBERS.map(m=>`<tr><td>${m.name}</td><td>${(totals[m.id]||0).toLocaleString()} ج</td></tr>`).join("");
+  let mn=Object.fromEntries(MEMBERS.map(m=>[m.id,m.name]));
+  let cn=Object.fromEntries(CATEGORIES.map(c=>[c.id,c.name]));
+
+  // Detailed expense log
+  b.innerHTML=arr.length?arr.map(x=>`<article class="expense-log-card">
+    <div class="expense-log-head">
+      <span class="expense-cat">${cn[x.category_id]||"—"}</span>
+      <strong class="expense-amount">${money(Number(x.amount))}</strong>
+    </div>
+    <div class="expense-log-meta">
+      <span>دفعها: <strong>${mn[x.payer_member_id]||"—"}</strong></span>
+      <span class="muted">${x.note||"بدون ملاحظة"}</span>
+    </div>
+    ${(IS_ADMIN||x.payer_member_id===CURRENT_MEMBER.id)?`<button class="btn danger expense-del compact" data-id="${x.id}">حذف</button>`:""}
+  </article>`).join(""):`<div class="empty-finance">لسه مفيش مصاريف مسجلة.</div>`;
+
+  $$(".expense-del").forEach(e=>e.onclick=async()=>{
+    if(DBLIVE)await TripDB.remove("expenses",e.dataset.id);
+    else{
+      arr=arr.filter(x=>x.id!==e.dataset.id);
+      localStorage.setItem("tripExpenses",JSON.stringify(arr));
+    }
+    renderExpenses();
+  });
+
+  // Core totals
+  const total=arr.reduce((s,x)=>s+Number(x.amount||0),0);
+  const activeMembers=confirmedMembers();
+  const participantCount=activeMembers.length;
+  const share=participantCount>0 ? total/participantCount : 0;
+
+  $("#totalExpense").textContent=money(total);
+  $("#shareExpense").textContent=money(share);
+  if($("#shareCaption")) $("#shareCaption").textContent=participantCount?`الحساب على ${participantCount} مشاركين مؤكدين`:"مفيش مشاركين مؤكدين";
+  if($("#participantKpi")) $("#participantKpi").textContent=participantCount.toLocaleString("ar-EG");
+  if($("#expenseCountSmall")) $("#expenseCountSmall").textContent=`${arr.length.toLocaleString("ar-EG")} دفعة مسجلة`;
+
+  // Paid totals per member
+  let totals={};
+  MEMBERS.forEach(m=>totals[m.id]=0);
+  arr.forEach(x=>totals[x.payer_member_id]=(totals[x.payer_member_id]||0)+Number(x.amount||0));
+
+  const sortedMembers=[...MEMBERS].sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
+  const top=sortedMembers[0];
+  if($("#topPayer")){
+    $("#topPayer").textContent=total>0&&top?top.name:"—";
+    $("#topPayerAmount").textContent=total>0&&top?money(totals[top.id]||0):"0 ج";
+  }
+
+  // Dynamic settlement: only confirmed trip members share the cost.
+  // If a non-participant already paid something, they remain a creditor with share = 0.
+  let people=MEMBERS
+    .map(m=>{
+      const paid=totals[m.id]||0;
+      const included=m.confirmed!==false;
+      const memberShare=included?share:0;
+      return {
+        id:m.id,
+        name:m.name,
+        paid,
+        share:memberShare,
+        net:paid-memberShare,
+        included
+      };
+    })
+    .filter(p=>p.included || p.paid>0);
+
+  if($("#settlementBody")){
+    $("#settlementBody").innerHTML=people.length?people.map(p=>`
+      <tr class="${p.included?"":"excluded-row"}">
+        <td>
+          <strong>${p.name}</strong>
+          ${p.included?"":'<small class="row-note">مش داخل قسمة الرحلة حاليًا</small>'}
+        </td>
+        <td>${money(p.paid)}</td>
+        <td>${p.included?money(p.share):'<span class="muted">0 ج</span>'}</td>
+        <td class="${p.net>0?"net-credit":p.net<0?"net-debt":"net-zero"}">${p.net>=0?"+":""}${money(p.net)}</td>
+        <td>${balanceBadge(p.net)}</td>
+      </tr>`).join(""):`<tr><td colspan="5"><div class="empty-finance">مفيش أعضاء داخل القسمة حاليًا.</div></td></tr>`;
+  }
+
+  if($("#settlementCards")){
+    $("#settlementCards").innerHTML=people.length?people.map(p=>`
+      <article class="settlement-person-card ${p.included?"":"excluded-row"}">
+        <div class="settlement-person-head">
+          <div>
+            <strong>${p.name}</strong>
+            ${p.included?"":'<small>مش داخل القسمة حاليًا</small>'}
+          </div>
+          ${balanceBadge(p.net)}
+        </div>
+        <div class="settlement-person-grid">
+          <div><span>دفع</span><strong>${money(p.paid)}</strong></div>
+          <div><span>نصيبه</span><strong>${p.included?money(p.share):"0 ج"}</strong></div>
+          <div class="settlement-net"><span>الصافي</span><strong class="${p.net>0?"net-credit":p.net<0?"net-debt":"net-zero"}">${p.net>=0?"+":""}${money(p.net)}</strong></div>
+        </div>
+      </article>`).join(""):'<div class="empty-finance">مفيش أعضاء داخل القسمة حاليًا.</div>';
+  }
+
+  const notice=$("#unassignedNotice");
+  if(notice){
+    if(participantCount===0){
+      notice.style.display="block";
+      notice.innerHTML="⚠️ مفيش أعضاء متعلمين إنهم طالعين الرحلة، لذلك نصيب الفرد متوقف لحد ما الأدمن يحدد المشاركين.";
+    }else{
+      const excluded=MEMBERS.filter(m=>m.confirmed===false);
+      if(excluded.length){
+        notice.style.display="block";
+        notice.innerHTML=`الحسبة الحالية على <strong>${participantCount}</strong> مشاركين فقط. خارج القسمة حاليًا: <strong>${excluded.map(m=>m.name).join("، ")}</strong>. أي تغيير من إدارة الأشقياء يعيد الحساب فورًا.`;
+      }else{
+        notice.style.display="none";
+      }
+    }
+  }
+
+  // Suggested transfers
+  const transfers=buildTransfers(people);
+  const tp=$("#transferPlan");
+  if(tp){
+    if(!total){
+      tp.innerHTML='<div class="empty-finance">أول ما نسجل مصاريف هتظهر التسوية هنا.</div>';
+    }else if(!transfers.length){
+      tp.innerHTML='<div class="settled-all">✅ كله خالص ومفيش تحويلات مطلوبة.</div>';
+    }else{
+      tp.innerHTML=transfers.map((t,i)=>`
+        <div class="transfer-row ${t.from.placeholder?"placeholder-transfer":""}">
+          <div class="transfer-num">${i+1}</div>
+          <div class="transfer-flow">
+            <strong>${t.from.name}</strong>
+            <span class="transfer-arrow">← يدفع لـ ←</span>
+            <strong>${t.to.name}</strong>
+          </div>
+          <div class="transfer-value">${money(t.amount)}</div>
+        </div>`).join("");
+    }
+  }
+
+  // Category breakdown
+  const categoryTotals={};
+  CATEGORIES.forEach(c=>categoryTotals[c.id]=0);
+  arr.forEach(x=>categoryTotals[x.category_id]=(categoryTotals[x.category_id]||0)+Number(x.amount||0));
+  const breakdown=CATEGORIES
+    .map(c=>({name:c.name,amount:categoryTotals[c.id]||0}))
+    .filter(x=>x.amount>0)
+    .sort((a,b)=>b.amount-a.amount);
+
+  const cb=$("#categoryBreakdown");
+  if(cb){
+    cb.innerHTML=breakdown.length?breakdown.map(x=>{
+      const pct=total?x.amount/total*100:0;
+      return `<div class="category-cost-row">
+        <div class="category-cost-head"><strong>${x.name}</strong><span>${money(x.amount)} • ${pct.toFixed(0)}%</span></div>
+        <div class="cost-bar"><i style="width:${Math.max(2,pct)}%"></i></div>
+      </div>`;
+    }).join(""):'<div class="empty-finance">لسه مفيش توزيع للتكاليف.</div>';
+  }
 }
 
 async function ideasInit(){
@@ -160,10 +527,36 @@ async function renderAdminPanel(){
     <button class="btn reset-pin" data-id="${r.member_id}">Reset PIN</button></div>`).join(""):`<div class="muted">مفيش طلبات Reset معلقة.</div>`;
 
   const all=await TripDB.adminMembers();
-  $("#adminMembers").innerHTML=all.map(m=>`
-    <div class="admin-row"><div><strong>${m.name}</strong> ${m.access_role==="admin"?'<span class="pill">ADMIN</span>':""}
-    <div class="muted" style="font-size:10px">${m.pin_set?"PIN متسجل":"لسه معملش PIN"}</div></div>
-    ${m.pin_set?`<button class="btn secondary reset-pin" data-id="${m.id}">Reset PIN</button>`:""}</div>`).join("");
+  $("#adminMembers").innerHTML=all.map(m=>{
+    const core=MEMBERS.find(x=>x.id===m.id);
+    const confirmed=core?.confirmed!==false;
+    return `<div class="admin-row admin-member-row">
+      <div>
+        <strong>${m.name}</strong> ${m.access_role==="admin"?'<span class="pill">ADMIN</span>':""}
+        <div class="muted" style="font-size:10px">${m.pin_set?"PIN متسجل":"لسه معملش PIN"} • ${confirmed?"داخل قسمة الرحلة":"خارج القسمة"}</div>
+      </div>
+      <div class="admin-actions">
+        <button class="btn ${confirmed?"secondary":"trip-on"} toggle-trip" data-id="${m.id}" data-confirmed="${confirmed}">
+          ${confirmed?"مش طالع":"رجّعه للرحلة"}
+        </button>
+        ${m.pin_set?`<button class="btn secondary reset-pin" data-id="${m.id}">Reset PIN</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+
+  $$(".toggle-trip").forEach(btn=>btn.onclick=async()=>{
+    const id=btn.dataset.id;
+    const current=btn.dataset.confirmed==="true";
+    const target=MEMBERS.find(m=>m.id===id)?.name||"العضو";
+    const msg=current?`تخلي ${target} خارج قسمة الرحلة؟ نصيب الفرد هيتحسب فورًا على العدد الجديد.`:`ترجّع ${target} لقسمة الرحلة؟`;
+    if(!confirm(msg)) return;
+    await TripDB.update("members",id,{confirmed:!current});
+    const local=MEMBERS.find(m=>m.id===id); if(local) local.confirmed=!current;
+    toast("تم تحديث المشاركين ✅");
+    renderCrew();
+    if($("#expenseList")) await renderExpenses();
+    await renderAdminPanel();
+  });
 
   $$(".reset-pin").forEach(btn=>btn.onclick=async()=>{
     const target=MEMBERS.find(m=>m.id===btn.dataset.id)?.name||"العضو";
@@ -208,7 +601,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
   }
 
   await loadCore();
-  await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities()]);
+  renderParticipantCount();
+  await Promise.all([renderHomeMeals(),renderCrew(),renderMeals(),renderFood(),renderResponsibilities(),renderFoodResponsibilities()]);
   foodAddInit();expenseInit();ideasInit();
   await renderRecentChanges(); await renderAdminPanel();
 

@@ -55,3 +55,151 @@ table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;text-align:rig
 
 .admin-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 @media(max-width:600px){.admin-row{align-items:flex-start}.admin-row .btn{flex:0 0 auto}}
+
+/* ===== Dynamic finance report ===== */
+.finance-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.finance-kpi{position:relative;overflow:hidden;padding:18px;border-radius:20px;background:rgba(4,31,43,.30);border:1px solid rgba(255,255,255,.09)}
+.finance-kpi.primary{background:linear-gradient(135deg,rgba(82,53,140,.30),rgba(0,173,171,.12))}
+.finance-kpi-icon{font-size:24px;margin-bottom:10px}
+.finance-kpi strong{display:block;font-size:clamp(24px,3vw,36px);line-height:1.1;margin:6px 0}
+.finance-kpi small{color:var(--muted);font-size:10px}
+.finance-report-card{overflow:hidden}
+.finance-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:10px}
+.finance-legend span{display:inline-flex;align-items:center;gap:6px}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.legend-dot.credit{background:#8ee59b}.legend-dot.debt{background:#ff8c8c}.legend-dot.settled{background:#66e6df}
+.settlement-table-wrap{overflow-x:auto}
+.settlement-table{min-width:720px}
+.settlement-table td:first-child strong{display:block}
+.row-note{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.placeholder-row{background:rgba(255,189,89,.035)}
+.balance-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}
+.balance-badge.credit{background:rgba(142,229,155,.12);color:#baf5c4;border:1px solid rgba(142,229,155,.20)}
+.balance-badge.debt{background:rgba(255,114,94,.10);color:#ffb3aa;border:1px solid rgba(255,114,94,.20)}
+.balance-badge.settled{background:rgba(102,230,223,.10);color:#9ff5f0;border:1px solid rgba(102,230,223,.20)}
+.net-credit{color:#baf5c4;font-weight:800}.net-debt{color:#ffb3aa;font-weight:800}.net-zero{color:#9ff5f0;font-weight:800}
+.finance-two-col{align-items:start}
+.transfer-row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.transfer-num{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:rgba(82,53,140,.28);font-size:10px;font-weight:900}
+.transfer-flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px}
+.transfer-arrow{color:var(--muted);font-size:10px}
+.transfer-value{font-size:14px;font-weight:900;white-space:nowrap}
+.placeholder-transfer{opacity:.72}
+.settled-all,.empty-finance{padding:18px;border-radius:14px;background:rgba(255,255,255,.035);color:var(--muted);font-size:12px;text-align:center}
+.category-cost-row{padding:10px 0}
+.category-cost-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px;margin-bottom:7px}
+.category-cost-head span{color:var(--muted)}
+.cost-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+.cost-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--aqua),#8c67d7)}
+.expense-cat{display:inline-flex;padding:4px 8px;border-radius:999px;background:rgba(0,173,171,.08);border:1px solid rgba(0,173,171,.15);font-size:10px}
+.expense-amount{font-weight:900}
+@media(max-width:1000px){.finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){
+  .finance-kpis{grid-template-columns:1fr 1fr}
+  .finance-kpi{padding:14px}.finance-kpi strong{font-size:23px}
+  .finance-two-col{grid-template-columns:1fr}
+  .transfer-row{grid-template-columns:24px 1fr}.transfer-value{grid-column:2}
+}
+
+.crew-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.trip-status{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}
+.trip-status.on{background:rgba(142,229,155,.10);color:#baf5c4;border:1px solid rgba(142,229,155,.18)}
+.trip-status.off{background:rgba(255,114,94,.08);color:#ffb3aa;border:1px solid rgba(255,114,94,.16)}
+.crew-inactive{opacity:.62;filter:saturate(.7)}
+.excluded-row{opacity:.72;background:rgba(255,255,255,.025)}
+.admin-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.btn.trip-on{background:rgba(142,229,155,.10);color:#baf5c4;border:1px solid rgba(142,229,155,.20)}
+@media(max-width:650px){.admin-member-row{align-items:flex-start;flex-direction:column}.admin-actions{width:100%;justify-content:flex-start}}
+
+/* ===== Mobile app polish ===== */
+.nav-icon{display:none}
+.mini-field{display:grid;gap:5px}.mini-field>span{font-size:10px;color:var(--muted);font-weight:700}
+.food-item-card{padding:15px;border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.11);margin-bottom:10px}
+.food-item-card.purchased{border-color:rgba(142,229,155,.20)}
+.food-item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.food-item-name{font-size:17px;font-weight:900}.food-item-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;color:var(--muted);font-size:10px}
+.food-head-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.food-owner-badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}
+.food-owner-badge.open{background:rgba(255,189,89,.10);color:#ffd892;border:1px solid rgba(255,189,89,.18)}
+.food-owner-badge.mine{background:rgba(142,229,155,.10);color:#baf5c4;border:1px solid rgba(142,229,155,.18)}
+.food-owner-badge.assigned{background:rgba(102,230,223,.10);color:#a7f3ef;border:1px solid rgba(102,230,223,.18)}
+.food-responsibility-action{margin-top:11px;display:flex;justify-content:flex-end;gap:8px}
+.food-responsibility-action .mini-field{min-width:190px}
+.food-edit-details{margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
+.food-edit-details summary,.add-food-details summary{cursor:pointer;color:var(--aqua);font-size:11px;font-weight:800;padding:6px 0}
+.food-edit-grid{display:grid;grid-template-columns:1.4fr .7fr .7fr .7fr .8fr auto;gap:8px;align-items:end;padding-top:8px}
+.add-food-details{border:1px dashed rgba(102,230,223,.20);border-radius:16px;padding:8px 12px;margin-bottom:14px}
+.food-resp-list{display:grid;gap:9px;margin-top:14px}
+.food-resp-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.food-resp-main{display:flex;align-items:center;gap:10px}.food-resp-icon{font-size:20px}.food-resp-main strong{display:block}.food-resp-main .muted{font-size:10px;margin-top:3px}
+.food-resp-owner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.food-resp-owner .mini-field{min-width:175px}
+
+/* Finance entry + mobile cards */
+.expense-form-grid{display:grid;grid-template-columns:1fr 1fr .75fr 1.4fr auto;gap:9px;align-items:end}
+.expense-add-btn{height:42px;white-space:nowrap}
+.expense-log-card{position:relative;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.expense-log-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.expense-log-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px;font-size:11px}
+.expense-log-card .compact{position:absolute;left:0;bottom:10px;padding:7px 10px;font-size:9px}
+.settlement-cards{display:none}
+.settlement-person-card{padding:13px;border-radius:17px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.settlement-person-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.settlement-person-head small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.settlement-person-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.settlement-person-grid>div{padding:9px;border-radius:12px;background:rgba(4,31,43,.30)}.settlement-person-grid span{display:block;color:var(--muted);font-size:9px}.settlement-person-grid strong{display:block;margin-top:4px;font-size:13px}
+
+@media(max-width:900px){
+  .food-edit-grid{grid-template-columns:1fr 1fr 1fr}
+  .expense-form-grid{grid-template-columns:1fr 1fr}
+  .expense-note-field{grid-column:1/-1}
+  .expense-add-btn{grid-column:1/-1}
+}
+
+@media(max-width:760px){
+  body{padding-bottom:74px}
+  .shell{width:calc(100% - 24px)}
+  .topbar{position:sticky;top:0}
+  .nav{display:grid!important;grid-template-columns:1fr auto;align-items:center!important;gap:8px!important;padding:8px 0!important}
+  .brand{grid-column:1;font-size:15px}.brand-mark{width:34px;height:34px;border-radius:12px}
+  .install-app-btn{grid-column:2;grid-row:1;padding:7px 9px}
+  #dbState{display:none!important}
+  #userBar{grid-column:1/-1;justify-content:flex-end!important}
+  #userBar .member-chip{display:inline-flex!important}
+  #userBar .btn{padding:7px 9px}
+  .links{
+    position:fixed!important;left:0;right:0;bottom:0;z-index:80;
+    width:100%!important;height:66px;padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+    display:grid!important;grid-template-columns:repeat(6,1fr);gap:2px!important;
+    background:rgba(6,19,29,.96);border-top:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(18px);overflow:visible!important
+  }
+  .links a{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px!important;border-radius:11px!important;font-size:8px!important;min-width:0}
+  .links a.active{background:rgba(102,230,223,.10)!important;color:#fff}
+  .nav-icon{display:block;font-size:17px;line-height:1}.nav-label{display:block;white-space:nowrap}
+  .hero{padding:24px 0 14px}.eyebrow{font-size:9px;letter-spacing:2px}
+  h1{font-size:clamp(38px,12vw,54px);line-height:1}
+  .subtitle{font-size:14px}
+  .section{padding-bottom:14px}.section-title{align-items:flex-start}.section-title h2{font-size:21px}
+  .card{border-radius:20px;padding:15px}
+  .quick .card{min-height:unset}
+  .quick .icon{font-size:24px}
+  .food-item-head{flex-direction:column}.food-head-badges{justify-content:flex-start}
+  .food-responsibility-action{justify-content:stretch}.food-responsibility-action>*{width:100%}.food-responsibility-action .mini-field{min-width:0}
+  .food-edit-grid{grid-template-columns:1fr 1fr}
+  .food-edit-grid .del-item{grid-column:1/-1}
+  .food-resp-card{align-items:flex-start;flex-direction:column}.food-resp-owner{width:100%;justify-content:stretch}.food-resp-owner>*{width:100%}.food-resp-owner .mini-field{min-width:0}
+  .finance-kpis{grid-template-columns:1fr 1fr!important;gap:8px}.finance-kpi{padding:12px!important;border-radius:16px}.finance-kpi-icon{font-size:19px;margin-bottom:5px}.finance-kpi strong{font-size:21px!important}.finance-kpi small{font-size:8px}
+  .settlement-table-wrap{display:none}.settlement-cards{display:grid;gap:8px}
+  .finance-report-card .section-title{display:block}.finance-report-card .section-title small{display:block;margin-top:5px}
+  .expense-entry-card{padding:14px}.expense-form-grid{grid-template-columns:1fr 1fr;gap:8px}.expense-note-field,.expense-add-btn{grid-column:1/-1}
+  .expense-log-card{padding-left:54px}
+  .transfer-flow{font-size:11px}
+}
+
+@media(max-width:430px){
+  .brand span:last-child{font-size:13px}
+  .install-app-btn{font-size:0}.install-app-btn::after{content:"📲";font-size:17px}
+  #userBar .member-chip{font-size:9px}
+  .finance-kpis{grid-template-columns:1fr 1fr}
+  .settlement-person-grid{grid-template-columns:1fr 1fr}.settlement-net{grid-column:1/-1}
+  .food-edit-grid{grid-template-columns:1fr}
+  .expense-form-grid{grid-template-columns:1fr}.expense-note-field,.expense-add-btn{grid-column:auto}
+}
