@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>دخول الشلة — Ras Sudr</title><link rel="stylesheet" href="assets/style.css"></head><body>
+<main class="shell" style="max-width:700px;padding-top:70px">
+  <section class="hero"><div class="eyebrow">CREW ACCESS</div><h1>دخول الشلة</h1><div class="subtitle">اكتب إيميلك وهيوصلك لينك دخول. مفيش باسورد.</div></section>
+  <section class="section"><div class="card">
+    <input id="loginEmail" class="text-input" type="email" placeholder="name@gmail.com">
+    <div style="margin-top:10px"><button id="sendLink" class="btn">ابعت لينك الدخول</button></div>
+    <div id="loginMsg" class="notice" style="display:none;margin-top:12px"></div>
+  </div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/db.js"></script>
+<script>
+document.getElementById("sendLink").onclick=async()=>{
+  const email=document.getElementById("loginEmail").value.trim();
+  const msg=document.getElementById("loginMsg");
+  if(!email)return;
+  try{
+    await TripDB.sendMagicLink(email);
+    msg.style.display="block";
+    msg.textContent="تمام ✅ افتح الإيميل واضغط لينك الدخول.";
+  }catch(e){
+    msg.style.display="block";
+    msg.textContent="حصلت مشكلة: "+e.message;
+  }
+};
+(async()=>{const r=await TripDB.init();if(r.authenticated) location.href="index.html";})();
+</script></body></html>
