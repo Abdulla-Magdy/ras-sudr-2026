@@ -5,6 +5,11 @@
   const s=document.createElement('script');
   s.src='./assets/v21.js?v=21';
   s.dataset.v21='1';
+  s.onload=()=>setTimeout(()=>{
+    document.querySelectorAll('.v21-version').forEach(el=>{
+      el.innerHTML='<strong>V21</strong> • آخر تحديث 23/09/2026 16:57';
+    });
+  },700);
   document.head.appendChild(s);
 })();
 
