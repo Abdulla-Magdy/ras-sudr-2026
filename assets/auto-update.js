@@ -1,12 +1,24 @@
 
 // Shared feature layers.
 (function loadFeatureLayers(){
+  function loadV28(){
+    if(window.__BAZ_V28_LOADED__ || document.querySelector('script[data-v28]')) return;
+    const s=document.createElement('script');
+    s.src='./assets/v28.js?v=28';
+    s.dataset.v28='1';
+    s.async=false;
+    document.head.appendChild(s);
+  }
+
   function loadV27(){
-    if(window.__BAZ_V27_LOADED__ || document.querySelector('script[data-v27]')) return;
+    if(window.__BAZ_V27_LOADED__){ loadV28(); return; }
+    const existing=document.querySelector('script[data-v27]');
+    if(existing){ existing.addEventListener('load',loadV28,{once:true}); return; }
     const s=document.createElement('script');
     s.src='./assets/v27.js?v=27';
     s.dataset.v27='1';
     s.async=false;
+    s.onload=loadV28;
     document.head.appendChild(s);
   }
 
@@ -84,7 +96,7 @@
 
 (function suppressLegacyVersionLabels(){
   const s=document.createElement('style');
-  s.textContent='body.v27-ui .v21-version,body.v27-ui .v22-version,body.v27-ui .v23-version,body.v27-ui .v24-version,body.v27-ui .v25-version,body.v27-ui .v26-version,body.v27-ui .v23-version-drawer,body.v27-ui .v24-version-drawer,body.v27-ui .v25-version-drawer,body.v27-ui .v26-version-drawer{display:none!important}';
+  s.textContent='body.v28-ui .v21-version,body.v28-ui .v22-version,body.v28-ui .v23-version,body.v28-ui .v24-version,body.v28-ui .v25-version,body.v28-ui .v26-version,body.v28-ui .v27-version,body.v28-ui .v23-version-drawer,body.v28-ui .v24-version-drawer,body.v28-ui .v25-version-drawer,body.v28-ui .v26-version-drawer,body.v28-ui .v27-version-drawer{display:none!important}';
   document.head.appendChild(s);
 })();
 
@@ -99,29 +111,18 @@ window.BazAutoUpdate = (() => {
 
   async function init(){
     if(!("serviceWorker" in navigator)) return;
-
     try{
-      registration=await navigator.serviceWorker.register("./service-worker.js",{
-        updateViaCache:"none"
-      });
-
+      registration=await navigator.serviceWorker.register("./service-worker.js",{updateViaCache:"none"});
       await check();
-
-      document.addEventListener("visibilitychange",()=>{
-        if(document.visibilityState==="visible") check();
-      });
+      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible") check();});
       window.addEventListener("pageshow",()=>check());
-
       navigator.serviceWorker.addEventListener("controllerchange",()=>{
         if(reloading) return;
         reloading=true;
         location.reload();
       });
-
-      setInterval(check, 30 * 60 * 1000);
-    }catch(e){
-      console.warn("Auto update init failed",e);
-    }
+      setInterval(check,30*60*1000);
+    }catch(e){console.warn("Auto update init failed",e);}
   }
 
   return {init,check};
