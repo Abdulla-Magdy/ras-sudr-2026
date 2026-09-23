@@ -1,6 +1,6 @@
-// Shared feature layers V21 -> V32 + V34 + V35 + V36.
+// Shared feature layers V21 -> V32 + V34 + V35 + V36 + V37.
 (function loadFeatureLayers(){
-  const versions=[21,22,23,24,25,26,27,28,29,30,31,32,34,35,36];
+  const versions=[21,22,23,24,25,26,27,28,29,30,31,32,34,35,36,37];
   versions.forEach(v=>{
     const flag=`__BAZ_V${v}_LOADED__`;
     if(window[flag] || document.querySelector(`script[data-v${v}]`)) return;
