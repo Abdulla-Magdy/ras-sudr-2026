@@ -6,7 +6,6 @@
   const UPDATED_AT='24/09/2026 02:25';
   const FILTER_KEY='v38ShoppingFilter';
   const VALID=new Set(['all','unassigned','mine','done']);
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
   let filter=localStorage.getItem(FILTER_KEY)||'all';
   if(!VALID.has(filter)) filter='all';
@@ -31,20 +30,27 @@
   const me=()=>window.TripDB?.getMember?.()||null;
 
   function stamp(){
-    $$('.v41-version,.v41-version-drawer').forEach(x=>x.remove());
     const footer=$('.v38-footer')||$('.footer');
     if(footer){
-      const d=document.createElement('div');
-      d.className='v41-version';
-      d.innerHTML=`<strong>${VERSION}</strong> • آخر تحديث ${UPDATED_AT}`;
-      footer.insertAdjacentElement('afterend',d);
+      let d=$('.v41-version');
+      if(!d){
+        d=document.createElement('div');
+        d.className='v41-version';
+        footer.insertAdjacentElement('afterend',d);
+      }
+      const next=`<strong>${VERSION}</strong> • آخر تحديث ${UPDATED_AT}`;
+      if(d.innerHTML!==next)d.innerHTML=next;
     }
     const actions=$('#mobileMenuDrawer .mobile-drawer-actions');
     if(actions){
-      const d=document.createElement('div');
-      d.className='v41-version-drawer';
-      d.textContent=`${VERSION} • ${UPDATED_AT}`;
-      actions.insertAdjacentElement('afterend',d);
+      let d=$('.v41-version-drawer');
+      if(!d){
+        d=document.createElement('div');
+        d.className='v41-version-drawer';
+        actions.insertAdjacentElement('afterend',d);
+      }
+      const next=`${VERSION} • ${UPDATED_AT}`;
+      if(d.textContent!==next)d.textContent=next;
     }
   }
 
@@ -206,7 +212,7 @@
     patchRefresh();
     watchFoodBody();
     stamp();
-  },350);
+  },700);
 
   window.addEventListener('pagehide',()=>clearInterval(poll),{once:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{patchRefresh();watchFoodBody();schedule(120);stamp();},{once:true});
