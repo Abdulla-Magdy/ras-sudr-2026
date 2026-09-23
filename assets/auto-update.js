@@ -1,12 +1,24 @@
 
 // Shared feature layers.
 (function loadFeatureLayers(){
+  function loadV25(){
+    if(window.__BAZ_V25_LOADED__ || document.querySelector('script[data-v25]')) return;
+    const s=document.createElement('script');
+    s.src='./assets/v25.js?v=25';
+    s.dataset.v25='1';
+    s.async=false;
+    document.head.appendChild(s);
+  }
+
   function loadV24(){
-    if(window.__BAZ_V24_LOADED__ || document.querySelector('script[data-v24]')) return;
+    if(window.__BAZ_V24_LOADED__){ loadV25(); return; }
+    const existing=document.querySelector('script[data-v24]');
+    if(existing){ existing.addEventListener('load',loadV25,{once:true}); return; }
     const s=document.createElement('script');
     s.src='./assets/v24.js?v=24';
     s.dataset.v24='1';
     s.async=false;
+    s.onload=loadV25;
     document.head.appendChild(s);
   }
 
