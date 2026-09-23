@@ -1,7 +1,7 @@
 (() => {
   if(window.__BAZ_V39__)return;
   window.__BAZ_V39__=true;
-  const VERSION='V39', UPDATED_AT='24/09/2026 01:18';
+  const VERSION='V40', UPDATED_AT='24/09/2026 01:22';
 
   // app.js defines loadCore before DOMContentLoaded. Replace only that helper so
   // members + categories are fetched together instead of one network round-trip
@@ -43,6 +43,6 @@
   else observe();
 
   window.addEventListener('load',()=>{
-    try{console.info(`[V39] first load ${Math.round(performance.now())}ms`)}catch(_){}
+    try{console.info(`[V40] first load ${Math.round(performance.now())}ms`)}catch(_){}
   },{once:true});
 })();

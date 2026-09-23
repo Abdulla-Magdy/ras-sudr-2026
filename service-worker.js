@@ -1,4 +1,4 @@
-const CACHE_NAME='ras-sudr-baz-v39';
+const CACHE_NAME='ras-sudr-baz-v40';
 const CORE=[
   './','./index.html','./login.html','./food.html','./shopping.html','./meals.html','./my-tasks.html','./responsibilities.html','./expenses.html','./crew.html','./ideas.html','./bag.html','./location.html','./manifest.webmanifest',
   './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v39.js?v=39','./assets/tutorial.js?v=39','./assets/auto-update.js?v=39','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
