@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v26";
+const CACHE_NAME = "ras-sudr-baz-v27";
 const CORE = [
   "./",
   "./index.html",
@@ -25,6 +25,7 @@ const CORE = [
   "./assets/v24.js?v=24",
   "./assets/v25.js?v=25",
   "./assets/v26.js?v=26",
+  "./assets/v27.js?v=27",
   "./assets/pwa-gate.js?v=20",
   "./assets/db.js?v=20",
   "./assets/fallback-data.js?v=20",
