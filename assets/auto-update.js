@@ -10,6 +10,9 @@
     s.async=false;
     document.head.appendChild(s);
   });
+  if(!document.querySelector('script[data-v36-refresh]')){
+    const s=document.createElement('script');s.src='./assets/v36-refresh.js?v=36';s.async=false;s.dataset.v36Refresh='1';document.head.appendChild(s);
+  }
 })();
 
 (function suppressLegacyVersionLabels(){
