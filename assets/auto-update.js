@@ -1,29 +1,21 @@
-// Shared feature layers V21 -> V33.
+// Shared feature layers V21 -> V32 + V34.
+// V34 downloads all layers in parallel but keeps execution ordered via async=false.
 (function loadFeatureLayers(){
-  const versions=[21,22,23,24,25,26,27,28,29,30,31,32,33];
-  const loadAt=(idx)=>{
-    if(idx>=versions.length) return;
-    const v=versions[idx], flag=`__BAZ_V${v}_LOADED__`;
-    if(window[flag]){ loadAt(idx+1); return; }
-    const existing=document.querySelector(`script[data-v${v}]`);
-    if(existing){
-      if(window[flag]) loadAt(idx+1);
-      else existing.addEventListener('load',()=>loadAt(idx+1),{once:true});
-      return;
-    }
+  const versions=[21,22,23,24,25,26,27,28,29,30,31,32,34];
+  versions.forEach(v=>{
+    const flag=`__BAZ_V${v}_LOADED__`;
+    if(window[flag] || document.querySelector(`script[data-v${v}]`)) return;
     const s=document.createElement('script');
     s.src=`./assets/v${v}.js?v=${v}`;
     s.dataset[`v${v}`]='1';
     s.async=false;
-    s.onload=()=>loadAt(idx+1);
     document.head.appendChild(s);
-  };
-  loadAt(0);
+  });
 })();
 
 (function suppressLegacyVersionLabels(){
   const s=document.createElement('style');
-  s.textContent='.v21-version,.v22-version,.v23-version,.v24-version,.v25-version,.v26-version,.v27-version,.v28-version,.v29-version,.v30-version,.v31-version,.v32-version,.v23-version-drawer,.v24-version-drawer,.v25-version-drawer,.v26-version-drawer,.v27-version-drawer,.v28-version-drawer,.v29-version-drawer,.v30-version-drawer,.v31-version-drawer,.v32-version-drawer{display:none!important}';
+  s.textContent='.v21-version,.v22-version,.v23-version,.v24-version,.v25-version,.v26-version,.v27-version,.v28-version,.v29-version,.v30-version,.v31-version,.v32-version,.v33-version,.v23-version-drawer,.v24-version-drawer,.v25-version-drawer,.v26-version-drawer,.v27-version-drawer,.v28-version-drawer,.v29-version-drawer,.v30-version-drawer,.v31-version-drawer,.v32-version-drawer,.v33-version-drawer{display:none!important}';
   document.head.appendChild(s);
 })();
 
