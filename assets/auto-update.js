@@ -58,6 +58,13 @@
   document.head.appendChild(s);
 })();
 
+// Once V25 is active, never show version labels injected later by older compatibility layers.
+(function suppressLegacyVersionLabels(){
+  const s=document.createElement('style');
+  s.textContent='body.v25-ui .v21-version,body.v25-ui .v22-version,body.v25-ui .v23-version,body.v25-ui .v24-version,body.v25-ui .v23-version-drawer,body.v25-ui .v24-version-drawer{display:none!important}';
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate = (() => {
   let registration=null;
   let reloading=false;
