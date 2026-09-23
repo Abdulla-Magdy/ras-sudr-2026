@@ -1,4 +1,13 @@
 
+// V21 feature layer. Loaded from every existing page through this shared file.
+(function loadV21(){
+  if(document.querySelector('script[data-v21]')) return;
+  const s=document.createElement('script');
+  s.src='./assets/v21.js?v=21';
+  s.dataset.v21='1';
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate = (() => {
   let registration=null;
   let reloading=false;
@@ -16,24 +25,19 @@ window.BazAutoUpdate = (() => {
         updateViaCache:"none"
       });
 
-      // Force a check every time the app opens.
       await check();
 
-      // And whenever the user returns to the app.
       document.addEventListener("visibilitychange",()=>{
         if(document.visibilityState==="visible") check();
       });
       window.addEventListener("pageshow",()=>check());
 
-      // New worker uses skipWaiting(), so when it takes control,
-      // reload once to load the new HTML/CSS/JS immediately.
       navigator.serviceWorker.addEventListener("controllerchange",()=>{
         if(reloading) return;
         reloading=true;
         location.reload();
       });
 
-      // Light periodic check while the app stays open.
       setInterval(check, 30 * 60 * 1000);
     }catch(e){
       console.warn("Auto update init failed",e);

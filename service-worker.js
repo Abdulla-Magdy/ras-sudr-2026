@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v20";
+const CACHE_NAME = "ras-sudr-baz-v21";
 const CORE = [
   "./",
   "./index.html",
@@ -10,11 +10,13 @@ const CORE = [
   "./crew.html",
   "./ideas.html",
   "./bag.html",
+  "./location.html",
   "./manifest.webmanifest",
   "./assets/style.css?v=20",
   "./assets/app.js?v=20",
   "./assets/tutorial.js?v=20",
   "./assets/auto-update.js?v=20",
+  "./assets/v21.js?v=21",
   "./assets/pwa-gate.js?v=20",
   "./assets/db.js?v=20",
   "./assets/fallback-data.js?v=20",
@@ -54,8 +56,6 @@ self.addEventListener("fetch", event => {
     req.destination === "style" ||
     url.pathname.endsWith(".webmanifest");
 
-  // App shell/code: network first.
-  // When online, this avoids serving old code after a deployment.
   if(isAppCode){
     event.respondWith(
       fetch(req, {cache:"no-store"}).then(res => {
@@ -74,7 +74,6 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Images and other static files: cache first + background refresh.
   event.respondWith(
     caches.match(req).then(cached=>{
       const refresh=fetch(req).then(res=>{
