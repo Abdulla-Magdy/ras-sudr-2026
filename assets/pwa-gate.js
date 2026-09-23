@@ -16,6 +16,29 @@
     return;
   }
 
+  // db.js assigns window.TripDB later. Wrap subscribe at assignment time so the
+  // legacy app's realtime callback no longer forces location.reload() under V36.
+  if(!Object.prototype.hasOwnProperty.call(window,'TripDB')){
+    let tripDbValue;
+    Object.defineProperty(window,'TripDB',{
+      configurable:true,
+      enumerable:true,
+      get(){return tripDbValue;},
+      set(v){
+        tripDbValue=v;
+        if(v&&typeof v.subscribe==='function'&&!v.__v36SubscribeWrapped){
+          const original=v.subscribe.bind(v);
+          v.subscribe=(table,cb)=>original(table,(...args)=>{
+            if(window.BazV36?.refreshCurrent){window.BazV36.refreshCurrent(table);return;}
+            return typeof cb==='function'?cb(...args):undefined;
+          });
+          v.__v36SubscribeWrapped=true;
+        }
+        Object.defineProperty(window,'TripDB',{value:v,writable:true,configurable:true,enumerable:true});
+      }
+    });
+  }
+
   const root=document.documentElement;
   root.classList.toggle('mobile-browser-gated',isMobile&&!isStandalone);
   root.classList.toggle('installed-pwa',isStandalone);
@@ -40,7 +63,6 @@
     };
     window.BAZ_COLD_START_REVEAL=reveal;
     window.BAZ_UI_BOOT={reveal};
-    // Safety only. Normal V36 boot reveals much earlier.
     setTimeout(reveal,4500);
   }
 })();
