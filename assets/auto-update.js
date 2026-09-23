@@ -1,27 +1,36 @@
 
-// Shared feature layers. V21 stays as the base feature pack; V22 adds smoke-test fixes.
+// Shared feature layers.
 (function loadFeatureLayers(){
-  function loadV22(){
-    if(window.__BAZ_V22_LOADED__ || document.querySelector('script[data-v22]')) return;
+  function loadV23(){
+    if(window.__BAZ_V23_LOADED__ || document.querySelector('script[data-v23]')) return;
     const s=document.createElement('script');
-    s.src='./assets/v22.js?v=22';
-    s.dataset.v22='1';
+    s.src='./assets/v23.js?v=23';
+    s.dataset.v23='1';
     s.async=false;
     document.head.appendChild(s);
   }
 
-  const existingV21=document.querySelector('script[data-v21]');
-  if(existingV21){
-    if(existingV21.dataset.loaded==='1') loadV22();
-    else existingV21.addEventListener('load',loadV22,{once:true});
-    return;
+  function loadV22(){
+    if(window.__BAZ_V22_LOADED__){ loadV23(); return; }
+    const existing=document.querySelector('script[data-v22]');
+    if(existing){ existing.addEventListener('load',loadV23,{once:true}); return; }
+    const s=document.createElement('script');
+    s.src='./assets/v22.js?v=22';
+    s.dataset.v22='1';
+    s.async=false;
+    s.onload=loadV23;
+    document.head.appendChild(s);
   }
+
+  if(window.__BAZ_V21_LOADED__){ loadV22(); return; }
+  const existingV21=document.querySelector('script[data-v21]');
+  if(existingV21){ existingV21.addEventListener('load',loadV22,{once:true}); return; }
 
   const s=document.createElement('script');
   s.src='./assets/v21.js?v=21';
   s.dataset.v21='1';
   s.async=false;
-  s.onload=()=>{s.dataset.loaded='1';loadV22();};
+  s.onload=loadV22;
   document.head.appendChild(s);
 })();
 
