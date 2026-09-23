@@ -1,12 +1,24 @@
 
 // Shared feature layers.
 (function loadFeatureLayers(){
+  function loadV29(){
+    if(window.__BAZ_V29_LOADED__ || document.querySelector('script[data-v29]')) return;
+    const s=document.createElement('script');
+    s.src='./assets/v29.js?v=29';
+    s.dataset.v29='1';
+    s.async=false;
+    document.head.appendChild(s);
+  }
+
   function loadV28(){
-    if(window.__BAZ_V28_LOADED__ || document.querySelector('script[data-v28]')) return;
+    if(window.__BAZ_V28_LOADED__){ loadV29(); return; }
+    const existing=document.querySelector('script[data-v28]');
+    if(existing){ existing.addEventListener('load',loadV29,{once:true}); return; }
     const s=document.createElement('script');
     s.src='./assets/v28.js?v=28';
     s.dataset.v28='1';
     s.async=false;
+    s.onload=loadV29;
     document.head.appendChild(s);
   }
 
@@ -96,7 +108,7 @@
 
 (function suppressLegacyVersionLabels(){
   const s=document.createElement('style');
-  s.textContent='body.v28-ui .v21-version,body.v28-ui .v22-version,body.v28-ui .v23-version,body.v28-ui .v24-version,body.v28-ui .v25-version,body.v28-ui .v26-version,body.v28-ui .v27-version,body.v28-ui .v23-version-drawer,body.v28-ui .v24-version-drawer,body.v28-ui .v25-version-drawer,body.v28-ui .v26-version-drawer,body.v28-ui .v27-version-drawer{display:none!important}';
+  s.textContent='body.v29-ui .v21-version,body.v29-ui .v22-version,body.v29-ui .v23-version,body.v29-ui .v24-version,body.v29-ui .v25-version,body.v29-ui .v26-version,body.v29-ui .v27-version,body.v29-ui .v28-version,body.v29-ui .v23-version-drawer,body.v29-ui .v24-version-drawer,body.v29-ui .v25-version-drawer,body.v29-ui .v26-version-drawer,body.v29-ui .v27-version-drawer,body.v29-ui .v28-version-drawer{display:none!important}';
   document.head.appendChild(s);
 })();
 
