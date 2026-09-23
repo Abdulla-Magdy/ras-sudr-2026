@@ -22,45 +22,51 @@
   document.documentElement.classList.toggle("mobile-browser-gated", isMobile && !isStandalone);
   document.documentElement.classList.toggle("installed-pwa", isStandalone);
 
-  // Prevent the legacy/base HTML from flashing before the V25+ UI layers finish.
-  // This script runs in <head>, so the cover is present before the first paint.
-  if (!onLogin) {
-    const root=document.documentElement;
-    root.classList.add('baz-ui-booting');
-    const style=document.createElement('style');
-    style.id='baz-ui-boot-style';
-    style.textContent=`
-      html.baz-ui-booting{background:#071822!important;overflow:hidden}
-      html.baz-ui-booting body{visibility:hidden!important}
-      html.baz-ui-booting::before{
-        content:'البز في الرحلة';position:fixed;inset:0;z-index:2147483646;
-        display:flex;align-items:center;justify-content:center;padding-bottom:34px;
-        background:linear-gradient(180deg,#06151f,#082634);color:#f7fbff;
-        font:900 20px/1.4 system-ui,-apple-system,'Segoe UI',Tahoma,Arial,sans-serif;
-        letter-spacing:-.02em
-      }
-      html.baz-ui-booting::after{
-        content:'';position:fixed;z-index:2147483647;left:50%;top:calc(50% + 25px);
-        width:24px;height:24px;margin-left:-12px;border-radius:50%;
-        border:3px solid rgba(255,255,255,.14);border-top-color:#73e7e1;
-        animation:bazBootSpin .75s linear infinite
-      }
-      @keyframes bazBootSpin{to{transform:rotate(360deg)}}
-      html.baz-ui-ready body{animation:bazUiIn .16s ease-out both}
-      @keyframes bazUiIn{from{opacity:.86}to{opacity:1}}
-      @media(prefers-reduced-motion:reduce){html.baz-ui-booting::after{animation:none}html.baz-ui-ready body{animation:none}}
-    `;
-    document.head.appendChild(style);
+  // V34: no full-screen loader between app pages. Keep the previous page visible
+  // until the next document is ready when Chromium supports cross-document transitions.
+  const navStyle=document.createElement('style');
+  navStyle.id='baz-nav-style';
+  navStyle.textContent=`
+    @view-transition{navigation:auto}
+    ::view-transition-old(root){animation:120ms ease-out both bazOld}
+    ::view-transition-new(root){animation:150ms ease-out both bazNew}
+    @keyframes bazOld{to{opacity:.88}}
+    @keyframes bazNew{from{opacity:.92}to{opacity:1}}
+    @media(prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}
+  `;
+  document.head.appendChild(navStyle);
 
-    let revealed=false;
-    const reveal=()=>{
-      if(revealed)return; revealed=true;
-      root.classList.remove('baz-ui-booting');
-      root.classList.add('baz-ui-ready');
-      setTimeout(()=>document.getElementById('baz-ui-boot-style')?.remove(),350);
-    };
-    window.BAZ_UI_BOOT={reveal};
-    // Safety valve: never leave the app hidden if a later enhancement fails.
-    setTimeout(reveal,6000);
+  // Warm the UI layer downloads as early as possible. auto-update.js still executes
+  // them in strict order, but the network fetches can happen in parallel.
+  if (!onLogin) {
+    [21,22,23,24,25,26,27,28,29,30,31,32,34].forEach(v=>{
+      const l=document.createElement('link');
+      l.rel='preload'; l.as='script'; l.href=`./assets/v${v}.js?v=${v}`;
+      document.head.appendChild(l);
+    });
+  }
+
+  // Only on a genuinely cold app start, suppress the legacy first paint without
+  // showing a spinner or a blocking loading screen. This flag survives all page
+  // changes in the same app session, so navigation itself is never covered.
+  let cold=false;
+  try{cold=!onLogin && sessionStorage.getItem('baz-ui-warm')!=='1';}catch(_){cold=false;}
+  if(cold){
+    const root=document.documentElement;
+    root.classList.add('baz-cold-start');
+    const s=document.createElement('style');
+    s.id='baz-cold-style';
+    s.textContent='html.baz-cold-start{background:#071822}html.baz-cold-start body{opacity:0!important}';
+    document.head.appendChild(s);
+    let done=false;
+    window.BAZ_UI_BOOT={reveal(){
+      if(done)return;done=true;
+      try{sessionStorage.setItem('baz-ui-warm','1')}catch(_){}
+      root.classList.remove('baz-cold-start');
+      requestAnimationFrame(()=>document.getElementById('baz-cold-style')?.remove());
+    }};
+    setTimeout(()=>window.BAZ_UI_BOOT?.reveal?.(),1800);
+  } else {
+    window.BAZ_UI_BOOT={reveal(){try{sessionStorage.setItem('baz-ui-warm','1')}catch(_){}}};
   }
 })();
