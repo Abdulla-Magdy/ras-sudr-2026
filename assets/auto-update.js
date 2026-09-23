@@ -5,10 +5,10 @@ window.BazAutoUpdate=(()=>{
     if(!('serviceWorker'in navigator))return;
     try{
       registration=await navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'});
-      await check();
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
-      window.addEventListener('pageshow',check);
+      window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
+      setTimeout(check,2500);
       setInterval(check,30*60*1000);
     }catch(e){console.warn('Auto update init failed',e)}
   }
@@ -25,7 +25,13 @@ async function v38SettleAfterCoreInit(){
   }
 }
 
+function startAutoUpdateWhenIdle(){
+  const run=()=>BazAutoUpdate.init();
+  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:1800});
+  else setTimeout(run,900);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
-  BazAutoUpdate.init();
   v38SettleAfterCoreInit();
+  startAutoUpdateWhenIdle();
 });

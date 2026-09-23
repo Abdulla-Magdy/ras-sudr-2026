@@ -1,7 +1,7 @@
-const CACHE_NAME='ras-sudr-baz-v38';
+const CACHE_NAME='ras-sudr-baz-v39';
 const CORE=[
   './','./index.html','./login.html','./food.html','./shopping.html','./meals.html','./my-tasks.html','./responsibilities.html','./expenses.html','./crew.html','./ideas.html','./bag.html','./location.html','./manifest.webmanifest',
-  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=20','./assets/v38.js?v=38','./assets/tutorial.js?v=20','./assets/auto-update.js?v=38','./assets/pwa-gate.js?v=38','./assets/db.js?v=20','./assets/fallback-data.js?v=20','./assets/supabase-config.js?v=20','./assets/install.js?v=20',
+  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v39.js?v=39','./assets/tutorial.js?v=39','./assets/auto-update.js?v=39','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
   './assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/apple-touch-icon.png','./assets/icons/app-icon-large.png','./assets/last-trip.jpg'
 ];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(CORE).catch(()=>{})))});
