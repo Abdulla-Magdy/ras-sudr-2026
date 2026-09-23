@@ -14,4 +14,18 @@ window.BazAutoUpdate=(()=>{
   }
   return{init,check};
 })();
-document.addEventListener('DOMContentLoaded',()=>BazAutoUpdate.init());
+
+async function v38SettleAfterCoreInit(){
+  for(let i=0;i<120;i++){
+    if(document.getElementById('mobileMenuToggle')&&window.BazV38?.refreshCurrent){
+      try{await window.BazV38.refreshCurrent('core-ready')}catch(e){console.warn('V38 settle failed',e)}
+      return;
+    }
+    await new Promise(r=>setTimeout(r,50));
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  BazAutoUpdate.init();
+  v38SettleAfterCoreInit();
+});
