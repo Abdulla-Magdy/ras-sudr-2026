@@ -1,12 +1,24 @@
 
 // Shared feature layers.
 (function loadFeatureLayers(){
+  function loadV26(){
+    if(window.__BAZ_V26_LOADED__ || document.querySelector('script[data-v26]')) return;
+    const s=document.createElement('script');
+    s.src='./assets/v26.js?v=26';
+    s.dataset.v26='1';
+    s.async=false;
+    document.head.appendChild(s);
+  }
+
   function loadV25(){
-    if(window.__BAZ_V25_LOADED__ || document.querySelector('script[data-v25]')) return;
+    if(window.__BAZ_V25_LOADED__){ loadV26(); return; }
+    const existing=document.querySelector('script[data-v25]');
+    if(existing){ existing.addEventListener('load',loadV26,{once:true}); return; }
     const s=document.createElement('script');
     s.src='./assets/v25.js?v=25';
     s.dataset.v25='1';
     s.async=false;
+    s.onload=loadV26;
     document.head.appendChild(s);
   }
 
@@ -58,10 +70,9 @@
   document.head.appendChild(s);
 })();
 
-// Once V25 is active, never show version labels injected later by older compatibility layers.
 (function suppressLegacyVersionLabels(){
   const s=document.createElement('style');
-  s.textContent='body.v25-ui .v21-version,body.v25-ui .v22-version,body.v25-ui .v23-version,body.v25-ui .v24-version,body.v25-ui .v23-version-drawer,body.v25-ui .v24-version-drawer{display:none!important}';
+  s.textContent='body.v26-ui .v21-version,body.v26-ui .v22-version,body.v26-ui .v23-version,body.v26-ui .v24-version,body.v26-ui .v25-version,body.v26-ui .v23-version-drawer,body.v26-ui .v24-version-drawer,body.v26-ui .v25-version-drawer{display:none!important}';
   document.head.appendChild(s);
 })();
 
