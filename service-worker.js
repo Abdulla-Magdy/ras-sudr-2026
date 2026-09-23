@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ras-sudr-baz-v27";
+const CACHE_NAME = "ras-sudr-baz-v28";
 const CORE = [
   "./",
   "./index.html",
@@ -26,6 +26,7 @@ const CORE = [
   "./assets/v25.js?v=25",
   "./assets/v26.js?v=26",
   "./assets/v27.js?v=27",
+  "./assets/v28.js?v=28",
   "./assets/pwa-gate.js?v=20",
   "./assets/db.js?v=20",
   "./assets/fallback-data.js?v=20",
@@ -39,60 +40,38 @@ const CORE = [
 
 self.addEventListener("install", event => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE).catch(() => {}))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE).catch(() => {})));
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", event => {
   const req = event.request;
   if(req.method !== "GET") return;
-
   const url = new URL(req.url);
   if(url.origin !== self.location.origin) return;
 
-  const isAppCode =
-    req.mode === "navigate" ||
-    req.destination === "script" ||
-    req.destination === "style" ||
-    url.pathname.endsWith(".webmanifest");
-
+  const isAppCode = req.mode === "navigate" || req.destination === "script" || req.destination === "style" || url.pathname.endsWith(".webmanifest");
   if(isAppCode){
-    event.respondWith(
-      fetch(req, {cache:"no-store"}).then(res => {
-        if(res && res.ok){
-          const copy=res.clone();
-          caches.open(CACHE_NAME).then(c=>c.put(req,copy));
-        }
-        return res;
-      }).catch(async()=>{
-        const cached=await caches.match(req);
-        if(cached) return cached;
-        if(req.mode==="navigate") return caches.match("./index.html");
-        throw new Error("offline");
-      })
-    );
+    event.respondWith(fetch(req,{cache:"no-store"}).then(res=>{
+      if(res && res.ok){const copy=res.clone();caches.open(CACHE_NAME).then(c=>c.put(req,copy));}
+      return res;
+    }).catch(async()=>{
+      const cached=await caches.match(req);
+      if(cached) return cached;
+      if(req.mode==="navigate") return caches.match("./index.html");
+      throw new Error("offline");
+    }));
     return;
   }
 
-  event.respondWith(
-    caches.match(req).then(cached=>{
-      const refresh=fetch(req).then(res=>{
-        if(res && res.ok){
-          const copy=res.clone();
-          caches.open(CACHE_NAME).then(c=>c.put(req,copy));
-        }
-        return res;
-      }).catch(()=>cached);
-      return cached || refresh;
-    })
-  );
+  event.respondWith(caches.match(req).then(cached=>{
+    const refresh=fetch(req).then(res=>{
+      if(res && res.ok){const copy=res.clone();caches.open(CACHE_NAME).then(c=>c.put(req,copy));}
+      return res;
+    }).catch(()=>cached);
+    return cached || refresh;
+  }));
 });
