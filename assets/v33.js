@@ -32,8 +32,8 @@
     if(!document.body?.classList.contains('v32-ui')) return false;
     if(page==='index') return !!document.getElementById('v25HomeDashboard');
     if(page==='shopping'||page==='food') return !!document.getElementById('foodBody');
-    if(page==='expenses') return !!document.getElementById('expenseLog') || !!document.querySelector('.expense-log');
-    if(page==='bag') return !!document.getElementById('privatePackingList') || !!document.querySelector('.v27-bag-list');
+    if(page==='expenses') return !!document.getElementById('expenseList');
+    if(page==='bag') return !!document.getElementById('bagList');
     if(page==='location') return !!document.getElementById('liveMap');
     return true;
   }
