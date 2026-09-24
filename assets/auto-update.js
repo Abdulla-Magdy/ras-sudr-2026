@@ -25,6 +25,15 @@
   document.head.appendChild(s);
 })();
 
+(function loadSprint2(){
+  if(window.__KENZ_SPRINT2__||document.querySelector('script[data-sprint2]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/sprint2.js?v=46';
+  s.dataset.sprint2='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
   async function check(){if(!registration)return;try{await registration.update()}catch(e){console.warn('SW update check failed',e)}}
@@ -46,6 +55,7 @@ async function v38SettleAfterCoreInit(){
   for(let i=0;i<120;i++){
     if(document.getElementById('mobileMenuToggle')&&window.BazV38?.refreshCurrent){
       try{await window.BazV38.refreshCurrent('core-ready')}catch(e){console.warn('V38 settle failed',e)}
+      try{await window.KenzSprint2?.hydrate?.()}catch(e){console.warn('Sprint2 settle failed',e)}
       return;
     }
     await new Promise(r=>setTimeout(r,50));
