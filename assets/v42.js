@@ -60,11 +60,10 @@
   function patchExpenseTabs(){
     if(route()!=='expenses.html')return;
     $$('.v38-expense-tab').forEach(btn=>{
-      if(btn.dataset.v42Bound)return;
-      const original=btn.onclick;
-      if(typeof original!=='function')return;
-      btn.dataset.v42Bound='1';
-      btn.onclick=async function(ev){
+      const current=btn.onclick;
+      if(typeof current!=='function'||current.__v42)return;
+      const original=current;
+      const wrapped=async function(ev){
         if(tabBusy)return;
         tabBusy=true;
         $$('.v38-expense-tab').forEach(x=>x.disabled=true);
@@ -72,8 +71,11 @@
         finally{
           tabBusy=false;
           $$('.v38-expense-tab').forEach(x=>x.disabled=false);
+          patchExpenseTabs();
         }
       };
+      wrapped.__v42=true;
+      btn.onclick=wrapped;
     });
   }
 
