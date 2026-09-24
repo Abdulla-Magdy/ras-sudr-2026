@@ -10,7 +10,7 @@
 (function loadV42(){
   if(window.__BAZ_V42__||document.querySelector('script[data-v42]'))return;
   const s=document.createElement('script');
-  s.src='./assets/v42.js?v=42b';
+  s.src='./assets/v42.js?v=43';
   s.dataset.v42='1';
   s.defer=true;
   document.head.appendChild(s);
