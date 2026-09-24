@@ -19,7 +19,7 @@
 (function loadV44(){
   if(window.__BAZ_V44__||document.querySelector('script[data-v44]'))return;
   const s=document.createElement('script');
-  s.src='./assets/v44.js?v=44';
+  s.src='./assets/v44.js?v=45';
   s.dataset.v44='1';
   s.defer=true;
   document.head.appendChild(s);
