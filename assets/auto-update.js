@@ -43,6 +43,15 @@
   document.head.appendChild(s);
 })();
 
+(function loadGames(){
+  if(window.__KENZ_GAMES__||document.querySelector('script[data-games]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/games.js?v=48';
+  s.dataset.games='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
   async function check(){if(!registration)return;try{await registration.update()}catch(e){console.warn('SW update check failed',e)}}
@@ -66,6 +75,7 @@ async function v38SettleAfterCoreInit(){
       try{await window.BazV38.refreshCurrent('core-ready')}catch(e){console.warn('V38 settle failed',e)}
       try{await window.KenzSprint2?.hydrate?.()}catch(e){console.warn('Sprint2 settle failed',e)}
       try{await window.KenzNotifications?.hydrate?.()}catch(e){console.warn('Notifications settle failed',e)}
+      try{await window.KenzGames?.hydrate?.()}catch(e){console.warn('Games settle failed',e)}
       return;
     }
     await new Promise(r=>setTimeout(r,50));
