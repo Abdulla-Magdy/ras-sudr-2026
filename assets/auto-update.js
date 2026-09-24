@@ -7,6 +7,15 @@
   document.head.appendChild(s);
 })();
 
+(function loadV42(){
+  if(window.__BAZ_V42__||document.querySelector('script[data-v42]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/v42.js?v=42';
+  s.dataset.v42='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
   async function check(){if(!registration)return;try{await registration.update()}catch(e){console.warn('SW update check failed',e)}}
