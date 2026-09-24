@@ -34,6 +34,15 @@
   document.head.appendChild(s);
 })();
 
+(function loadNotifications(){
+  if(window.__KENZ_NOTIFICATIONS__||document.querySelector('script[data-notifications]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/notifications.js?v=47';
+  s.dataset.notifications='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
   async function check(){if(!registration)return;try{await registration.update()}catch(e){console.warn('SW update check failed',e)}}
@@ -56,6 +65,7 @@ async function v38SettleAfterCoreInit(){
     if(document.getElementById('mobileMenuToggle')&&window.BazV38?.refreshCurrent){
       try{await window.BazV38.refreshCurrent('core-ready')}catch(e){console.warn('V38 settle failed',e)}
       try{await window.KenzSprint2?.hydrate?.()}catch(e){console.warn('Sprint2 settle failed',e)}
+      try{await window.KenzNotifications?.hydrate?.()}catch(e){console.warn('Notifications settle failed',e)}
       return;
     }
     await new Promise(r=>setTimeout(r,50));
