@@ -1,7 +1,7 @@
-const CACHE_NAME='ras-sudr-baz-v52';
+const CACHE_NAME='ras-sudr-baz-v53';
 const CORE=[
   './','./index.html','./login.html','./shopping.html','./meals.html','./my-tasks.html','./responsibilities.html','./expenses.html','./admin-expenses.html','./crew.html','./ideas.html','./bag.html','./location.html','./transport.html','./activity.html','./games.html','./manifest.webmanifest?v=52',
-  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v41.js?v=41','./assets/v42.js?v=43','./assets/v44.js?v=49','./assets/sprint2.js?v=46','./assets/notifications.js?v=51','./assets/games.js?v=48','./assets/admin-notify.js?v=51','./assets/admin-notify.css?v=51','./assets/app-version.js?v=52','./assets/v51-runtime.js?v=51','./assets/expense-approval.js?v=52','./assets/tutorial.js?v=39','./assets/auto-update.js?v=52','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
+  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v41.js?v=41','./assets/v42.js?v=43','./assets/v44.js?v=49','./assets/sprint2.js?v=46','./assets/notifications.js?v=51','./assets/games.js?v=53','./assets/admin-notify.js?v=51','./assets/admin-notify.css?v=51','./assets/app-version.js?v=52','./assets/v51-runtime.js?v=51','./assets/expense-approval.js?v=52','./assets/tutorial.js?v=39','./assets/auto-update.js?v=53','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
   './assets/icons/icon-192.png?v=51','./assets/icons/icon-512.png?v=51','./assets/icons/apple-touch-icon.png?v=51','./assets/icons/app-icon-large.png?v=51','./assets/last-trip.jpg'
 ];
 
