@@ -1,6 +1,15 @@
 window.KENZ_APP_VERSION='V49';
 window.KENZ_APP_UPDATED_AT='25/09/2026 02:55';
 
+(function loadVersionBadge(){
+  if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/app-version.js?v=49';
+  s.dataset.appVersion='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
 (function loadV41(){
   if(window.__BAZ_V41__||document.querySelector('script[data-v41]'))return;
   const s=document.createElement('script');
