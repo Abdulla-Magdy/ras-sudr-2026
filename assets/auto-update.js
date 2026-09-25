@@ -1,5 +1,5 @@
-window.KENZ_APP_VERSION='V52';
-window.KENZ_APP_UPDATED_AT='25/09/2026 16:36';
+window.KENZ_APP_VERSION='V53';
+window.KENZ_APP_UPDATED_AT='25/09/2026 17:15';
 
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
@@ -32,7 +32,7 @@ window.KENZ_APP_UPDATED_AT='25/09/2026 16:36';
 })();
 (function loadGames(){
   if(window.__KENZ_GAMES__||document.querySelector('script[data-games]'))return;
-  const s=document.createElement('script');s.src='./assets/games.js?v=48';s.dataset.games='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/games.js?v=53';s.dataset.games='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadAdminNotify(){
   if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;
@@ -53,7 +53,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=52',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=53',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
