@@ -11,6 +11,7 @@
   function toast(t){if(window.toast)window.toast(t);else alert(t)}
   function me(){return window.TripDB?.getMember?.()||null}
   function isAdmin(){return !!window.TripDB?.isAdmin?.()}
+  let gamesOpen=null, accessCheckedAt=0;
 
   async function getClient(){
     if(client)return client;
@@ -23,6 +24,31 @@
   async function rpc(name,args={}){
     const c=await getClient(); if(!c) throw new Error('DB_NOT_READY');
     const {data,error}=await c.rpc(name,args); if(error) throw error; return data;
+  }
+  async function checkAccess(force=false){
+    if(force||gamesOpen===null||Date.now()-accessCheckedAt>5000){
+      gamesOpen=await rpc('get_games_access');accessCheckedAt=Date.now();
+    }
+    return gamesOpen;
+  }
+  async function mountAdmin(){
+    if(page()!=='crew.html'||!isAdmin())return;
+    const panel=$('#adminPanel');if(!panel||$('#gamesAccessControl'))return;
+    const box=document.createElement('div');box.id='gamesAccessControl';box.className='g48-card';box.style.marginTop='18px';
+    box.innerHTML='<div class="g48-title">🎮 فتح وقفل الألعاب</div><div id="gamesAccessStatus" class="g48-sub">بنراجع الحالة…</div><button id="gamesAccessButton" class="btn" type="button" disabled style="margin-top:10px">جارٍ التحميل…</button>';
+    panel.appendChild(box);
+    const button=$('#gamesAccessButton'),status=$('#gamesAccessStatus');
+    const paint=()=>{status.textContent=gamesOpen?'الألعاب مفتوحة لكل الأشقياء':'الألعاب مقفولة لحد ما تفتحها وقت الرحلة';button.textContent=gamesOpen?'🔒 اقفل الألعاب':'🎮 افتح الألعاب';button.disabled=false};
+    try{await checkAccess(true);paint()}catch(e){status.textContent='تعذر تحميل حالة الألعاب';button.textContent='إعادة المحاولة';button.disabled=false}
+    button.onclick=async()=>{
+      button.disabled=true;
+      try{
+        if(gamesOpen===null){await checkAccess(true);paint();return}
+        const next=!gamesOpen;
+        if(!confirm(next?'تفتح الألعاب لكل الأشقياء دلوقتي؟':'تقفل الألعاب لكل الأشقياء دلوقتي؟')){button.disabled=false;return}
+        gamesOpen=await rpc('admin_set_games_access',{p_enabled:next});accessCheckedAt=Date.now();paint();toast(gamesOpen?'الألعاب اتفتحت 🎮':'الألعاب اتقفلت 🔒');
+      }catch(e){console.error('[Games access]',e);status.textContent='حصلت مشكلة؛ الحالة ما اتغيرتش';button.disabled=false}
+    };
   }
   function ago(v){
     if(!v)return '';
@@ -115,14 +141,18 @@
     if(page()!=='games.html'||!$('#gamesApp')||rendering)return;
     rendering=true;style();ensureNav();
     try{
+      if(!await checkAccess(true)){
+        $('#gamesApp').innerHTML='<div class="g48-card" style="text-align:center"><div class="g48-title">🔒 الألعاب مقفولة دلوقتي</div><div class="g48-sub">بودا هيفتحها وقت الرحلة 🎮</div></div>';
+        return;
+      }
       const tab=location.hash==='#forbidden'?'forbidden':'court';
       $('#gamesApp').innerHTML=`<div class="g48-tabs"><button class="g48-tab ${tab==='court'?'active':''}" data-tab="court">⚖️ محكمة الأشقياء</button><button class="g48-tab ${tab==='forbidden'?'active':''}" data-tab="forbidden">🤐 ممنوع تقول</button></div><div id="gamePane"><div class="g48-empty">بنجهز اللعب…</div></div>`;
       document.querySelectorAll('.g48-tab').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.tab==='forbidden'?'forbidden':'court';renderGames()}));
       if(tab==='court')await renderCourt();else await renderForbidden();
-    }catch(e){console.error('[V48 games]',e);$('#gamesApp').innerHTML='<div class="g48-empty">حصلت مشكلة في تحميل الألعاب — جرّب تاني.</div>'}finally{rendering=false}
+    }catch(e){console.error('[V48 games]',e);$('#gamesApp').innerHTML='<div class="g48-empty">تعذر التأكد من حالة الألعاب — جرّب تاني.</div>'}finally{rendering=false}
   }
 
-  async function hydrate(){style();ensureNav();if(page()==='games.html')await renderGames()}
+  async function hydrate(){style();ensureNav();await mountAdmin();if(page()==='games.html')await renderGames()}
   function boot(){
     style();ensureNav();hydrate();
     window.addEventListener('hashchange',()=>{if(page()==='games.html')renderGames()});
