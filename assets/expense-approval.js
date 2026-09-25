@@ -86,6 +86,9 @@
 
   function ensureAdminLink(){
     if(!window.TripDB?.isAdmin?.())return;
+    // Review requests are reached through the admin dashboard.
+    $$('.ea52-admin-link').forEach(x=>x.remove());
+    return;
     const desktop=$('.links');
     if(desktop&&!desktop.querySelector('a[href="admin-expenses.html"]')){
       const a=document.createElement('a');a.href='admin-expenses.html';a.className='ea52-admin-link';a.innerHTML='🧾 مراجعة المصاريف <span class="ea52-badge" data-ea52-count hidden>0</span>';
