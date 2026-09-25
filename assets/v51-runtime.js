@@ -25,7 +25,9 @@
   }
 
   function ensureAdminNotify(){
-    if(page()!=='crew.html')return;
+    // admin-notify.js stays mounted and polls its own page.
+    return;
+    if(page()!=='admin-announcements.html')return;
     if(!window.TripDB?.isAdmin?.())return;
     if(document.getElementById('adminPushBox'))return;
     // admin-notify.js owns the actual UI; re-run it on SPA navigation by reloading only when needed.
