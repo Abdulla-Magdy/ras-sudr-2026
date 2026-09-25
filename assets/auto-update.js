@@ -1,10 +1,10 @@
-window.KENZ_APP_VERSION='V51';
-window.KENZ_APP_UPDATED_AT='25/09/2026 03:35';
+window.KENZ_APP_VERSION='V52';
+window.KENZ_APP_UPDATED_AT='25/09/2026 16:36';
 
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
   const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=51';
+  s.src='./assets/app-version.js?v=52';
   s.dataset.appVersion='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -42,6 +42,10 @@ window.KENZ_APP_UPDATED_AT='25/09/2026 03:35';
   if(window.__KENZ_V51_RUNTIME__||document.querySelector('script[data-v51-runtime]'))return;
   const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=51';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s);
 })();
+(function loadExpenseApproval(){
+  if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
+  const s=document.createElement('script');s.src='./assets/expense-approval.js?v=52';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
+})();
 
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
@@ -49,7 +53,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=51',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=52',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
@@ -68,6 +72,7 @@ async function v38SettleAfterCoreInit(){
       try{await window.KenzNotifications?.hydrate?.()}catch(e){console.warn('Notifications settle failed',e)}
       try{await window.KenzGames?.hydrate?.()}catch(e){console.warn('Games settle failed',e)}
       try{await window.KenzAdminNotify?.mount?.()}catch(e){console.warn('Admin notify settle failed',e)}
+      try{await window.KenzExpenseApproval?.hydrate?.(true)}catch(e){console.warn('Expense approval settle failed',e)}
       return;
     }
     await new Promise(r=>setTimeout(r,50));
