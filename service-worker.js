@@ -1,8 +1,8 @@
-const CACHE_NAME='ras-sudr-baz-v48';
+const CACHE_NAME='ras-sudr-baz-v49';
 const CORE=[
   './','./index.html','./login.html','./food.html','./shopping.html','./meals.html','./my-tasks.html','./responsibilities.html','./expenses.html','./crew.html','./ideas.html','./bag.html','./location.html','./transport.html','./activity.html','./games.html','./manifest.webmanifest',
-  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v39.js?v=39','./assets/v41.js?v=41','./assets/v42.js?v=43','./assets/v44.js?v=45','./assets/sprint2.js?v=46','./assets/notifications.js?v=47','./assets/games.js?v=48','./assets/tutorial.js?v=39','./assets/auto-update.js?v=48','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
-  './assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/apple-touch-icon.png','./assets/icons/app-icon-large.png','./assets/last-trip.jpg'
+  './assets/style.css?v=20','./assets/v38.css?v=38','./assets/app.js?v=39','./assets/v38.js?v=39','./assets/v39.js?v=39','./assets/v41.js?v=41','./assets/v42.js?v=43','./assets/v44.js?v=49','./assets/sprint2.js?v=46','./assets/notifications.js?v=47','./assets/games.js?v=48','./assets/admin-notify.js?v=49','./assets/admin-notify.css?v=49','./assets/app-version.js?v=49','./assets/tutorial.js?v=39','./assets/auto-update.js?v=49','./assets/pwa-gate.js?v=38','./assets/db.js?v=39','./assets/fallback-data.js?v=39','./assets/supabase-config.js?v=39','./assets/install.js?v=39',
+  './assets/icons/icon-192.png?v=49','./assets/icons/icon-512.png?v=49','./assets/icons/apple-touch-icon.png','./assets/icons/app-icon-large.png?v=49','./assets/last-trip.jpg'
 ];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(CORE).catch(()=>{})))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
@@ -17,7 +17,7 @@ self.addEventListener('push',event=>{
   const title=data.title||'البز في الرحلة';
   const options={
     body:data.body||'فيه تحديث جديد',
-    icon:'./assets/icons/app-icon-large.png',
+    icon:'./assets/icons/app-icon-large.png?v=49',
     tag:data.id?`kenz-${data.id}`:`kenz-${data.type||'update'}`,
     renotify:false,
     data:{url:data.url||'activity.html'},

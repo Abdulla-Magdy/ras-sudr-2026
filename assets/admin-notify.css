@@ -1,0 +1,1 @@
+#adminPushBox textarea.text-input{resize:vertical;min-height:84px}#adminPushBox select.text-input{min-height:42px}#adminPushBox .section-title{margin-bottom:10px}@media(max-width:640px){#adminPushBox .admin-add-member-grid{grid-template-columns:1fr!important}#adminPushBox .mini-field{grid-column:1/-1!important}#adminPushSend{width:100%}}
