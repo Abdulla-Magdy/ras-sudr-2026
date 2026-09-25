@@ -168,17 +168,7 @@
 
   async function renderHome(){
     if(page()!=='index.html')return;
-    const main=$('#appMain');if(!main)return;
-    let section=$('#notificationHome');
-    if(!section){
-      section=document.createElement('section');section.id='notificationHome';section.className='section';
-      const readiness=$('#tripReadiness')?.closest('.section');if(readiness)readiness.before(section);else main.prepend(section);
-    }
-    section.innerHTML=`<div class="v38-panel"><div class="n47-home-head"><h2>🔔 التنبيهات وآخر النشاط</h2><a href="activity.html">عرض الكل</a></div><div id="n47HomePush"></div><div id="n47HomeFeed" class="n47-feed" style="margin-top:10px"><div class="n47-empty">بنجيب آخر النشاط…</div></div></div>`;
-    await renderPushBox($('#n47HomePush'),true);
-    try{
-      const feed=await getFeed(3);const host=$('#n47HomeFeed');if(host)host.innerHTML=feed.length?feed.map(eventHtml).join(''):'<div class="n47-empty">أول نشاط جديد هيظهر هنا.</div>';
-    }catch(e){console.warn('[V47 home feed]',e)}
+    $('#notificationHome')?.remove();
   }
 
   async function renderActivity(){
@@ -187,8 +177,7 @@
     host.innerHTML='<div class="v38-empty">بنحمّل آخر النشاط…</div>';
     try{
       const feed=await getFeed(80);
-      host.innerHTML=`<section class="section"><div class="v38-panel"><div class="v38-panel-head"><h2>Push Notifications</h2></div><div id="n47ActivityPush"></div></div></section><section class="section"><div class="v38-panel"><div class="v38-panel-head"><h2>آخر النشاط</h2><small>${feed.length.toLocaleString('ar-EG')}</small></div><div class="n47-feed">${feed.length?feed.map(eventHtml).join(''):'<div class="n47-empty">لسه مفيش نشاط جديد.</div>'}</div></div></section>`;
-      await renderPushBox($('#n47ActivityPush'));
+      host.innerHTML=`<section class="section"><div class="v38-panel"><div class="v38-panel-head"><h2>آخر النشاط</h2><small>${feed.length.toLocaleString('ar-EG')}</small></div><div class="n47-feed">${feed.length?feed.map(eventHtml).join(''):'<div class="n47-empty">لسه مفيش نشاط جديد.</div>'}</div></div></section>`;
       await rpc('mark_activity_seen').catch(()=>{});
       await ensureBell();
     }catch(e){console.error('[V47 activity]',e);host.innerHTML='<div class="v38-empty">حصلت مشكلة في تحميل النشاط — جرّب تاني.</div>'}
@@ -196,7 +185,7 @@
 
   async function hydrate(){
     if(hydrating)return;hydrating=true;
-    try{injectStyle();await ensureBell();await renderHome();await renderActivity()}finally{hydrating=false}
+    try{injectStyle();await ensureBell();await renderHome();await renderActivity();if(page()==='settings.html')await renderPushBox($('#settingsPush'))}finally{hydrating=false}
   }
 
   async function boot(){
