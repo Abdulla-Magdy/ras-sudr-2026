@@ -130,6 +130,8 @@
   }
 
   function ensureNav(){
+    // Transport is reached from the trip hub.
+    return;
     const drawer=$('#mobileMenuDrawer .mobile-drawer-links');
     if(drawer&&!drawer.querySelector('a[href="transport.html"]')){
       const ideas=drawer.querySelector('a[href="ideas.html"]');
