@@ -1,10 +1,10 @@
-window.KENZ_APP_VERSION='V49';
-window.KENZ_APP_UPDATED_AT='25/09/2026 02:55';
+window.KENZ_APP_VERSION='V50';
+window.KENZ_APP_UPDATED_AT='25/09/2026 03:12';
 
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
   const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=49';
+  s.src='./assets/app-version.js?v=50';
   s.dataset.appVersion='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -51,6 +51,15 @@ window.KENZ_APP_UPDATED_AT='25/09/2026 02:55';
   const s=document.createElement('script');
   s.src='./assets/notifications.js?v=47';
   s.dataset.notifications='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
+(function loadHomePushCleanup(){
+  if(window.__KENZ_HOME_PUSH_CLEANUP__||document.querySelector('script[data-home-push-cleanup]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/home-push-cleanup.js?v=50';
+  s.dataset.homePushCleanup='1';
   s.defer=true;
   document.head.appendChild(s);
 })();
