@@ -857,6 +857,7 @@ async function privateBagInit(){
 async function renderAdminPanel(){
   const panel=$("#adminPanel"); if(!panel || !IS_ADMIN) return;
   panel.style.display="block";
+  if(!$("#resetRequests") || !$("#adminMembers")) return;
   const shortcut=$("#adminShortcut"); if(shortcut) shortcut.style.display="block";
 
   const addMemberBtn=$("#addMemberBtn");
