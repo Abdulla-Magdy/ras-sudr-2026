@@ -1,3 +1,6 @@
+window.KENZ_APP_VERSION='V49';
+window.KENZ_APP_UPDATED_AT='25/09/2026 02:55';
+
 (function loadV41(){
   if(window.__BAZ_V41__||document.querySelector('script[data-v41]'))return;
   const s=document.createElement('script');
@@ -19,7 +22,7 @@
 (function loadV44(){
   if(window.__BAZ_V44__||document.querySelector('script[data-v44]'))return;
   const s=document.createElement('script');
-  s.src='./assets/v44.js?v=45';
+  s.src='./assets/v44.js?v=49';
   s.dataset.v44='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -48,6 +51,15 @@
   const s=document.createElement('script');
   s.src='./assets/games.js?v=48';
   s.dataset.games='1';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
+
+(function loadAdminNotify(){
+  if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;
+  const s=document.createElement('script');
+  s.src='./assets/admin-notify.js?v=49';
+  s.dataset.adminNotify='1';
   s.defer=true;
   document.head.appendChild(s);
 })();
