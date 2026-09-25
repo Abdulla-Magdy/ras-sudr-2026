@@ -1,0 +1,16 @@
+.ia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.ia-card{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;text-decoration:none;color:inherit;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:17px;min-height:74px}
+.ia-card strong{font-size:15px;grid-column:1}.ia-card small{color:var(--muted,#9fb0bb);font-size:11px;grid-column:1}.ia-card>span{font-size:24px;grid-column:2;grid-row:1/3;color:#67e3dc}
+.ia-card:focus-visible,.ia-card:hover{border-color:rgba(103,227,220,.55);background:rgba(103,227,220,.08)}
+.v38-ui .section{padding:10px 0 17px}
+.v38-ui .hero{margin-bottom:18px}
+.v38-ui .hero h1{font-size:clamp(24px,5vw,36px);line-height:1.25}
+.v38-ui .subtitle,.v38-ui .ia-card small{line-height:1.65}
+.v38-ui .v38-panel{padding:18px}
+.topbar .links{gap:4px}
+.topbar .links a{white-space:nowrap}
+.topbar .links .ia-admin-link{color:#f1d58f}
+#v38BottomNav{grid-template-columns:repeat(5,minmax(0,1fr))}
+#v38BottomNav a{min-width:0}
+#v38BottomNav a span:last-child{white-space:nowrap;font-size:10px}
+@media(max-width:370px){#v38BottomNav a span:last-child{font-size:9px}}
