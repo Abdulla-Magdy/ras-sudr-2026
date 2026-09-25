@@ -1,5 +1,14 @@
-window.KENZ_APP_VERSION='V53';
-window.KENZ_APP_UPDATED_AT='25/09/2026 17:15';
+window.KENZ_APP_VERSION='V54';
+window.KENZ_APP_UPDATED_AT='25/09/2026 17:55';
+
+(function loadInformationArchitecture(){
+  if(!document.querySelector('link[data-ia-css]')){
+    const l=document.createElement('link');l.rel='stylesheet';l.href='./assets/information-architecture.css?v=54';l.dataset.iaCss='1';document.head.appendChild(l);
+  }
+  if(!document.querySelector('script[data-ia]')){
+    const s=document.createElement('script');s.src='./assets/information-architecture.js?v=54';s.dataset.ia='1';s.defer=true;document.head.appendChild(s);
+  }
+})();
 
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
@@ -24,27 +33,27 @@ window.KENZ_APP_UPDATED_AT='25/09/2026 17:15';
 })();
 (function loadSprint2(){
   if(window.__KENZ_SPRINT2__||document.querySelector('script[data-sprint2]'))return;
-  const s=document.createElement('script');s.src='./assets/sprint2.js?v=46';s.dataset.sprint2='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/sprint2.js?v=54';s.dataset.sprint2='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadNotifications(){
   if(window.__KENZ_NOTIFICATIONS__||document.querySelector('script[data-notifications]'))return;
-  const s=document.createElement('script');s.src='./assets/notifications.js?v=51';s.dataset.notifications='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/notifications.js?v=54';s.dataset.notifications='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadGames(){
   if(window.__KENZ_GAMES__||document.querySelector('script[data-games]'))return;
-  const s=document.createElement('script');s.src='./assets/games.js?v=53';s.dataset.games='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/games.js?v=54';s.dataset.games='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadAdminNotify(){
   if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;
-  const s=document.createElement('script');s.src='./assets/admin-notify.js?v=51';s.dataset.adminNotify='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/admin-notify.js?v=54';s.dataset.adminNotify='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadV51Runtime(){
   if(window.__KENZ_V51_RUNTIME__||document.querySelector('script[data-v51-runtime]'))return;
-  const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=51';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=54';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadExpenseApproval(){
   if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
-  const s=document.createElement('script');s.src='./assets/expense-approval.js?v=52';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/expense-approval.js?v=54';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
 })();
 
 window.BazAutoUpdate=(()=>{
@@ -53,7 +62,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=53',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=54',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
