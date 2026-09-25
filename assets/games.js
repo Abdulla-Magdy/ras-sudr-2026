@@ -32,7 +32,7 @@
     return gamesOpen;
   }
   async function mountAdmin(){
-    if(page()!=='crew.html'||!isAdmin())return;
+    if(page()!=='admin-games.html'||!isAdmin())return;
     const panel=$('#adminPanel');if(!panel||$('#gamesAccessControl'))return;
     const box=document.createElement('div');box.id='gamesAccessControl';box.className='g48-card';box.style.marginTop='18px';
     box.innerHTML='<div class="g48-title">🎮 فتح وقفل الألعاب</div><div id="gamesAccessStatus" class="g48-sub">بنراجع الحالة…</div><button id="gamesAccessButton" class="btn" type="button" disabled style="margin-top:10px">جارٍ التحميل…</button>';
@@ -77,6 +77,8 @@
   }
 
   function ensureNav(){
+    // Games live inside the trip hub; no extra global navigation or home card.
+    return;
     const desktop=document.querySelector('.links');
     if(desktop&&!desktop.querySelector('a[href="games.html"]')){
       const a=document.createElement('a');a.href='games.html';a.textContent='🎮 الألعاب';
