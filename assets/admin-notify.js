@@ -6,6 +6,12 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   let client=null;
 
+  if(!document.querySelector('link[data-admin-notify-css]')){
+    const l=document.createElement('link');
+    l.rel='stylesheet';l.href='./assets/admin-notify.css?v=49';l.dataset.adminNotifyCss='1';
+    document.head.appendChild(l);
+  }
+
   async function db(){
     if(client)return client;
     const c=window.SUPABASE_CONFIG||{};
