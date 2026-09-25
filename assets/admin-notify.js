@@ -55,7 +55,7 @@
   }
 
   async function mount(){
-    if(mounting||page()!=='crew.html')return;
+    if(mounting||page()!=='admin-announcements.html')return;
     if(!window.TripDB?.getMember?.())return;
     if(!window.TripDB?.isAdmin?.())return;
     const panel=$('#adminPanel');
@@ -64,7 +64,7 @@
     try{
       let members=[];
       try{members=await window.TripDB.list('members',{order:'sort_order'})}catch(e){console.warn('[V51 admin members]',e)}
-      if(page()!=='crew.html'||!document.body.contains(panel)||$('#adminPushBox'))return;
+      if(page()!=='admin-announcements.html'||!document.body.contains(panel)||$('#adminPushBox'))return;
       const wrap=document.createElement('div');
       wrap.id='adminPushBox';
       wrap.style.cssText='margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)';
