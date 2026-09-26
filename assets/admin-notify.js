@@ -8,7 +8,7 @@
 
   if(!document.querySelector('link[data-admin-notify-css]')){
     const l=document.createElement('link');
-    l.rel='stylesheet';l.href='./assets/admin-notify.css?v=51';l.dataset.adminNotifyCss='1';
+    l.rel='stylesheet';l.href='./assets/admin-notify.css?v=55';l.dataset.adminNotifyCss='1';
     document.head.appendChild(l);
   }
 
@@ -54,7 +54,28 @@
     }
   }
 
+  async function loadPushStatus(){
+    const host=$('#adminPushMembers');if(!host)return;
+    try{
+      const c=await db();if(!c)throw new Error('DB_NOT_READY');
+      const {data,error}=await c.rpc('admin_push_status');if(error)throw error;
+      if(!document.body.contains(host))return;
+      const rows=Array.isArray(data)?data:[];
+      const active=rows.filter(x=>Number(x.active_devices)>0 && x.confirmed);
+      const confirmed=rows.filter(x=>x.confirmed);
+      host.innerHTML=`<p class="muted">${active.length} من ${confirmed.length} أعضاء مفعّلين الإشعارات على جهاز واحد على الأقل. دي حالة الاشتراكات المسجلة، مش تأكيد وصول كل رسالة.</p><div class="admin-push-list">${rows.map(x=>`<div class="admin-push-member"><span>${esc(x.name)}${x.confirmed?'':' <small>(غير مشارك)</small>'}</span><strong class="${Number(x.active_devices)>0?'push-on':'push-off'}">${Number(x.active_devices)>0?`✅ مفعّل (${Number(x.active_devices)} جهاز)`:'⏳ لسه ما فعّلش'}</strong></div>`).join('')}</div>`;
+    }catch(e){console.warn('[V55 push status]',e);if(document.body.contains(host))host.innerHTML='<p class="muted">مش قادرين نعرض حالة الإشعارات دلوقتي. جرّب تحديث الصفحة.</p>'}
+  }
+
   async function mount(){
+    if(page()==='admin.html' && window.TripDB?.isAdmin?.()){
+      const grid=$('.ia-grid');
+      if(grid && !$('#adminPushStatusShortcut')){
+        const link=document.createElement('a');link.id='adminPushStatusShortcut';link.className='ia-card';link.href='admin-announcements.html#adminPushMembers';
+        link.innerHTML='<strong>🔔 حالة الإشعارات</strong><small>مين فعّل ومين لسه</small><span aria-hidden="true">‹</span>';
+        grid.appendChild(link);
+      }
+    }
     if(mounting||page()!=='admin-announcements.html')return;
     if(!window.TripDB?.getMember?.())return;
     if(!window.TripDB?.isAdmin?.())return;
@@ -77,9 +98,12 @@
           <label class="mini-field"><span>يفتح صفحة</span><select id="adminPushUrl" class="text-input"><option value="activity.html">آخر النشاط</option><option value="index.html">الرئيسية</option><option value="shopping.html">المشتريات</option><option value="expenses.html">الحسابات</option><option value="transport.html">العربيات</option><option value="games.html">الألعاب</option><option value="bag.html">الشنطة</option></select></label>
           <button id="adminPushSend" class="btn">🔔 ابعت الإشعار</button>
         </div>
-        <div id="adminPushStatus" class="muted" style="font-size:9px;margin-top:8px"></div>`;
+        <div id="adminPushStatus" class="muted" style="font-size:9px;margin-top:8px"></div>
+        <div class="admin-push-overview"><div class="section-title"><h3>مين فعّل الإشعارات؟</h3><button id="adminPushRefresh" class="btn secondary" type="button">تحديث الحالة</button></div><div id="adminPushMembers">بنحمّل الحالة…</div></div>`;
       panel.appendChild(wrap);
       $('#adminPushSend').onclick=send;
+      $('#adminPushRefresh').onclick=loadPushStatus;
+      await loadPushStatus();
     }finally{mounting=false}
   }
 

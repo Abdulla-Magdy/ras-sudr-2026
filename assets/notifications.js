@@ -5,7 +5,7 @@
   const VERSION='V47';
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-  let client=null,pollTimer=null,lastMain=null,hydrating=false;
+  let client=null,pollTimer=null,lastMain=null,hydrating=false,promptShown=false;
 
   function page(){return location.pathname.split('/').pop()||'index.html'}
   function supported(){return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window}
@@ -23,6 +23,9 @@
       .n47-home-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.n47-home-head h2{margin:0}.n47-home-head a{font-size:8.5px;color:var(--accent,#67e3dc);font-weight:900;text-decoration:none}
       .n47-status-ok{color:#9af3ba}.n47-status-warn{color:#f1d58f}.n47-status-bad{color:#ff8798}
       .n47-empty{padding:16px;text-align:center;color:var(--muted,#9fb0bb);font-size:9px}
+      .n55-prompt-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.76);display:grid;place-items:center;padding:20px}
+      .n55-prompt{width:min(100%,430px);border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:25px;background:#10242e;box-shadow:0 24px 65px rgba(0,0,0,.5);text-align:center;color:white}
+      .n55-prompt .ico{font-size:38px}.n55-prompt h2{margin:10px 0;font-size:20px}.n55-prompt p{line-height:1.7;color:#c4d1d8;font-size:13px}.n55-prompt-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:18px}.n55-prompt-actions .btn{min-width:130px}
       @media(max-width:640px){.n47-push{align-items:flex-start;flex-direction:column}.n47-push-actions{width:100%}.n47-push-actions .btn{flex:1}.n47-bell{width:36px;height:36px}}
     `;document.head.appendChild(s);
   }
@@ -108,6 +111,23 @@
     return {supported:true,permission,active};
   }
 
+  async function remindToEnable(){
+    if(promptShown||!window.TripDB?.getMember?.()||$('#n55PushPrompt'))return;
+    const st=await pushState().catch(()=>({supported:false,permission:'unsupported',active:false}));
+    if(st.active||promptShown)return;
+    promptShown=true;
+    const overlay=document.createElement('div');overlay.id='n55PushPrompt';overlay.className='n55-prompt-backdrop';
+    const explanation=!st.supported?'المتصفح ده مش بيدعم إشعارات التطبيق. افتح التطبيق المثبّت على موبايلك.':st.permission==='denied'?'الإشعارات مقفولة من إعدادات الموبايل. اسمح للتطبيق بالإشعارات من الإعدادات، وبعدها افتحه تاني.':'فعّل الإشعارات عشان توصلك أخبار الرحلة المهمة حتى لو التطبيق مقفول.';
+    overlay.innerHTML=`<div class="n55-prompt" role="dialog" aria-modal="true" aria-labelledby="n55PromptTitle"><div class="ico">🔔</div><h2 id="n55PromptTitle">خلّي أخبار الرحلة توصلك</h2><p>${explanation}</p><div class="n55-prompt-actions">${st.supported&&st.permission!=='denied'?'<button class="btn" type="button" data-push-enable>تفعيل الإشعارات</button>':'<a class="btn" href="settings.html">إعدادات الإشعارات</a>'}<button class="btn secondary" type="button" data-push-later>بعد كده</button></div></div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-push-later]').onclick=()=>overlay.remove();
+    overlay.querySelector('[data-push-enable]')?.addEventListener('click',async e=>{
+      const button=e.currentTarget;button.disabled=true;button.textContent='بنفعّل…';
+      try{await enablePush();overlay.remove();window.toast?.('الإشعارات اتفعلت ✅');await hydrate()}
+      catch(err){console.warn('[V55 push prompt]',err);button.disabled=false;button.textContent='تفعيل الإشعارات';window.toast?.(Notification.permission==='denied'?'اسمح بالإشعارات من إعدادات الموبايل':'التفعيل ما اكتملش؛ تقدر تحاول تاني من الإعدادات')}
+    });
+  }
+
   function relativeTime(value){
     const t=new Date(value).getTime(),diff=Math.max(0,Date.now()-t),m=Math.floor(diff/60000);
     if(m<1)return 'حالًا';if(m<60)return `من ${m.toLocaleString('ar-EG')} د`;
@@ -191,11 +211,12 @@
   async function boot(){
     injectStyle();
     for(let i=0;i<120;i++){
-      if(window.TripDB?.getMember?.()){await hydrate();break}
+      if(window.TripDB?.getMember?.()){await hydrate();setTimeout(()=>remindToEnable().catch(console.warn),700);break}
       await new Promise(r=>setTimeout(r,50));
     }
     lastMain=$('#appMain');
     pollTimer=setInterval(()=>{
+      if(!promptShown && window.TripDB?.getMember?.())remindToEnable().catch(console.warn);
       const m=$('#appMain');if(m!==lastMain){lastMain=m;hydrate();return}
       ensureBell();
     },3000);
@@ -203,6 +224,6 @@
     window.addEventListener('pagehide',()=>{if(pollTimer)clearInterval(pollTimer)},{once:true});
   }
 
-  window.KenzNotifications={hydrate,enablePush,disablePush,renderActivity,renderHome};
+  window.KenzNotifications={hydrate,enablePush,disablePush,renderActivity,renderHome,remindToEnable};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
