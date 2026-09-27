@@ -1,5 +1,5 @@
-window.KENZ_APP_VERSION='V55';
-window.KENZ_APP_UPDATED_AT='26/09/2026';
+window.KENZ_APP_VERSION='V56';
+window.KENZ_APP_UPDATED_AT='27/09/2026';
 
 (function loadInformationArchitecture(){
   if(!document.querySelector('link[data-ia-css]')){
@@ -62,7 +62,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=55',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=56',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
