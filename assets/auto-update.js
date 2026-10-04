@@ -1,5 +1,5 @@
-window.KENZ_APP_VERSION='V58';
-window.KENZ_APP_UPDATED_AT='04/10/2026 21:18';
+window.KENZ_APP_VERSION='V59';
+window.KENZ_APP_UPDATED_AT='04/10/2026';
 
 (function loadInformationArchitecture(){
   if(!document.querySelector('link[data-ia-css]')){
@@ -13,7 +13,7 @@ window.KENZ_APP_UPDATED_AT='04/10/2026 21:18';
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
   const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=58';
+  s.src='./assets/app-version.js?v=59';
   s.dataset.appVersion='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -55,11 +55,11 @@ window.KENZ_APP_UPDATED_AT='04/10/2026 21:18';
   if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
   const s=document.createElement('script');s.src='./assets/expense-approval.js?v=54';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
 })();
-(function loadPurchaseV58(){
+(function loadPurchaseV59(){
   const p=location.pathname.split('/').pop()||'index.html';
   if(!['expenses.html','admin-expenses.html'].includes(p))return;
-  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v58]'))return;
-  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=58';s.dataset.purchaseV58='1';document.head.appendChild(s);
+  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v59]'))return;
+  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=59';s.dataset.purchaseV59='1';document.head.appendChild(s);
 })();
 
 window.BazAutoUpdate=(()=>{
@@ -68,11 +68,11 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=58',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=59',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
-      setTimeout(check,500);
+      setTimeout(check,400);
       setInterval(check,20*60*1000);
     }catch(e){console.warn('Auto update init failed',e)}
   }
@@ -96,8 +96,8 @@ async function v38SettleAfterCoreInit(){
 
 function startAutoUpdateWhenIdle(){
   const run=()=>BazAutoUpdate.init();
-  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:300});
-  else setTimeout(run,120);
+  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:250});
+  else setTimeout(run,100);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
