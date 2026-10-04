@@ -5,7 +5,7 @@
   const adminPages=new Set(['admin.html','admin-expenses.html','admin-members.html','admin-games.html','admin-announcements.html']);
   const primaryNav=[['index.html','🏠','الرئيسية'],['shopping.html','🛒','المشتريات'],['expenses.html','💰','الحسابات'],['trip.html','🧭','الرحلة'],['account.html','👤','حسابي']];
   const desktopNav=[['index.html','🏠','الرئيسية'],['shopping.html','🛒','المشتريات'],['expenses.html','💰','الحسابات'],['leftovers.html','🧺','البواقي'],['trip.html','🧭','الرحلة'],['account.html','👤','حسابي']];
-  const group=file=>({meals:'trip',crew:'trip',transport:'trip',location:'trip',ideas:'trip',games:'trip',bag:'account',settings:'account','my-tasks':'account',responsibilities:'shopping',leftovers:'expenses'}[file.replace('.html','')]||file.replace('.html',''));
+  const group=file=>({meals:'trip',crew:'trip',transport:'trip',location:'trip',ideas:'trip',games:'trip',bag:'account',settings:'account','my-tasks':'account',responsibilities:'shopping',leftovers:'expenses','admin-expenses':'admin'}[file.replace('.html','')]||file.replace('.html',''));
   function apply(){
     const member=window.TripDB?.getMember?.();if(!member)return;
     const isAdmin=!!window.TripDB?.isAdmin?.(),file=current();
@@ -25,7 +25,7 @@
       const html=`<div class="v38-drawer-label">الصفحات الرئيسية</div>`+
         primaryNav.map(([href,icon,label])=>`<a href="${href}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></a>`).join('')+
         `<div class="v38-drawer-label">إقفال الرحلة</div><a href="leftovers.html"><span class="nav-icon">🧺</span><span class="nav-label">تصفية بواقي الرحلة</span></a>`+
-        (isAdmin?'<div class="v38-drawer-label">الإدارة</div><a href="admin.html"><span class="nav-icon">👑</span><span class="nav-label">لوحة الأدمن</span></a>':'');
+        (isAdmin?'<div class="v38-drawer-label">الإدارة</div><a href="admin-expenses.html"><span class="nav-icon">🧾</span><span class="nav-label">مراجعة المصاريف</span></a><a href="admin.html"><span class="nav-icon">👑</span><span class="nav-label">لوحة الأدمن</span></a>':'');
       if(drawer.innerHTML!==html)drawer.innerHTML=html;
     }
     document.querySelector('#notificationHome')?.remove();
