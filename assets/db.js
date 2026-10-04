@@ -3,7 +3,6 @@ window.TripDB = (() => {
   let client=null, trip=null, authUser=null, member=null;
 
   function cfg(){ return window.SUPABASE_CONFIG || {}; }
-
   async function ensureAnonSession(){
     const c=cfg();
     if(!c.url || !c.key || !window.supabase) return {configured:false};
@@ -21,13 +20,11 @@ window.TripDB = (() => {
   async function init(){
     const ready=await ensureAnonSession();
     if(!ready.configured) return {configured:false,bound:false};
-
     const {data:t,error:te}=await client.from("trips")
       .select("id,slug,name,start_date,end_date,target_people")
       .eq("slug",cfg().tripSlug).single();
     if(te) throw te;
     trip=t;
-
     const {data:m,error:me}=await client.rpc("get_my_trip_member");
     if(me) throw me;
     member=Array.isArray(m)?(m[0]||null):m;
@@ -67,7 +64,6 @@ window.TripDB = (() => {
     if(error) throw error;
     return data||[];
   }
-
 
   async function adminAddMember(name,role=""){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
@@ -162,7 +158,6 @@ window.TripDB = (() => {
     return data;
   }
 
-
   async function claimFoodItem(itemId){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {data,error}=await client.rpc("claim_food_item",{p_item_id:itemId});
@@ -177,17 +172,59 @@ window.TripDB = (() => {
     return data;
   }
 
-
-  async function recordPurchaseBatch(payerMemberId,itemIds,amount,note=""){
+  async function recordPurchaseBatch(payerMemberId,itemIds,amount,note="",lines=[]){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {data,error}=await client.rpc("record_purchase_batch",{
       p_payer_member_id:payerMemberId,
       p_item_ids:itemIds,
       p_amount:Number(amount),
-      p_note:note||null
+      p_note:note||null,
+      p_lines:Array.isArray(lines)?lines:[]
     });
     if(error) throw error;
     return data;
+  }
+
+  async function leftovers(){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("trip_leftovers");
+    if(error) throw error;
+    return data||[];
+  }
+
+  async function setLeftoverRemaining(itemId,qty){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("set_leftover_remaining",{p_shopping_item_id:itemId,p_remaining_qty:Number(qty)});
+    if(error) throw error;
+    return data;
+  }
+
+  async function claimLeftover(itemId,qty,memberId=null){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("claim_leftover",{p_shopping_item_id:itemId,p_qty:Number(qty),p_member_id:memberId||null});
+    if(error) throw error;
+    return data;
+  }
+
+  async function removeLeftoverAllocation(allocationId){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {error}=await client.rpc("remove_leftover_allocation",{p_allocation_id:allocationId});
+    if(error) throw error;
+    return true;
+  }
+
+  async function setLeftoverStatus(itemId,status){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {error}=await client.rpc("set_leftover_status",{p_shopping_item_id:itemId,p_status:status});
+    if(error) throw error;
+    return true;
+  }
+
+  async function leftoverCharges(){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("leftover_charges");
+    if(error) throw error;
+    return data||{total:0,by_member:[]};
   }
 
   async function recentChanges(limit=12){
@@ -208,6 +245,7 @@ window.TripDB = (() => {
   return {
     init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminAddMember,adminSetMemberConfirmed,adminResetRequests,
     forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
-    upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,recentChanges,subscribe
+    upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,leftovers,setLeftoverRemaining,claimLeftover,
+    removeLeftoverAllocation,setLeftoverStatus,leftoverCharges,recentChanges,subscribe
   };
 })();
