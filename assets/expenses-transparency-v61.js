@@ -7,7 +7,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const page=()=>location.pathname.split('/').pop()||'index.html';
   let state={members:[],categories:[],expenses:[],links:[],items:[]};
-  let payerFilter='all',categoryFilter='all',signature='';
+  let payerFilter='all',categoryFilter='all',signature='',patchedRender=false;
 
   function style(){
     if($('#et61Style'))return;
@@ -74,6 +74,13 @@
     const count=document.createElement('div');count.className='et61-count';count.textContent=`${rows.length.toLocaleString('ar-EG')} حركة معتمدة`;host.appendChild(count);
   }
 
+  function patchLegacyRender(){
+    if(patchedRender||typeof window.renderExpenses!=='function')return;
+    const original=window.renderExpenses;
+    window.renderExpenses=async function(...args){const out=await original.apply(this,args);render();return out};
+    patchedRender=true;
+  }
+
   async function load(force=false){
     if(page()!=='expenses.html'||!window.TripDB?.isBound?.())return;
     try{
@@ -91,7 +98,7 @@
   }
 
   style();
-  const start=async()=>{for(let i=0;i<100&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,80));ensureUi();await load(true);try{window.TripDB?.subscribe?.('expenses',()=>load(true))}catch(_){};};
+  const start=async()=>{for(let i=0;i<100&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,80));ensureUi();patchLegacyRender();await load(true);try{window.TripDB?.subscribe?.('expenses',()=>load(true))}catch(_){};};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>load(true));
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load(true)});
