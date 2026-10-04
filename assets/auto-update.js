@@ -1,4 +1,4 @@
-window.KENZ_APP_VERSION='V61';
+window.KENZ_APP_VERSION='V62';
 window.KENZ_APP_UPDATED_AT='04/10/2026';
 
 (function loadInformationArchitecture(){
@@ -13,7 +13,7 @@ window.KENZ_APP_UPDATED_AT='04/10/2026';
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
   const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=61';
+  s.src='./assets/app-version.js?v=62';
   s.dataset.appVersion='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -57,17 +57,11 @@ window.KENZ_APP_UPDATED_AT='04/10/2026';
   if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
   const s=document.createElement('script');s.src='./assets/expense-approval.js?v=54';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
 })();
-(function loadPurchaseV61(){
+(function loadPurchaseV62(){
   const p=location.pathname.split('/').pop()||'index.html';
   if(p!=='expenses.html')return;
-  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v61]'))return;
-  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=61';s.dataset.purchaseV61='1';document.head.appendChild(s);
-})();
-(function loadExpenseTransparencyV61(){
-  const p=location.pathname.split('/').pop()||'index.html';
-  if(p!=='expenses.html')return;
-  if(window.__KENZ_EXPENSE_TRANSPARENCY_V61__||document.querySelector('script[data-expense-transparency-v61]'))return;
-  const s=document.createElement('script');s.src='./assets/expenses-transparency-v61.js?v=61';s.dataset.expenseTransparencyV61='1';document.head.appendChild(s);
+  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v62]'))return;
+  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=62';s.dataset.purchaseV62='1';document.head.appendChild(s);
 })();
 
 window.BazAutoUpdate=(()=>{
@@ -76,7 +70,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=61',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=62',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
