@@ -1,4 +1,4 @@
-window.KENZ_APP_VERSION='V62';
+window.KENZ_APP_VERSION='V63';
 window.KENZ_APP_UPDATED_AT='04/10/2026';
 
 (function loadInformationArchitecture(){
@@ -9,60 +9,20 @@ window.KENZ_APP_UPDATED_AT='04/10/2026';
     const s=document.createElement('script');s.src='./assets/information-architecture.js?v=61';s.dataset.ia='1';s.defer=true;document.head.appendChild(s);
   }
 })();
-
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
-  const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=62';
-  s.dataset.appVersion='1';
-  s.defer=true;
-  document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/app-version.js?v=63';s.dataset.appVersion='1';s.defer=true;document.head.appendChild(s);
 })();
-
-(function loadV41(){
-  if(window.__BAZ_V41__||document.querySelector('script[data-v41]'))return;
-  const s=document.createElement('script');s.src='./assets/v41.js?v=41';s.dataset.v41='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadV42(){
-  if(window.__BAZ_V42__||document.querySelector('script[data-v42]'))return;
-  const s=document.createElement('script');s.src='./assets/v42.js?v=43';s.dataset.v42='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadV44(){
-  if(window.__BAZ_V44__||document.querySelector('script[data-v44]'))return;
-  const s=document.createElement('script');s.src='./assets/v44.js?v=49';s.dataset.v44='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadSprint2(){
-  if(window.__KENZ_SPRINT2__||document.querySelector('script[data-sprint2]'))return;
-  const s=document.createElement('script');s.src='./assets/sprint2.js?v=54';s.dataset.sprint2='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadNotifications(){
-  if(window.__KENZ_NOTIFICATIONS__||document.querySelector('script[data-notifications]'))return;
-  const s=document.createElement('script');s.src='./assets/notifications.js?v=55';s.dataset.notifications='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadGames(){
-  if(window.__KENZ_GAMES__||document.querySelector('script[data-games]'))return;
-  const s=document.createElement('script');s.src='./assets/games.js?v=54';s.dataset.games='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadAdminNotify(){
-  if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;
-  const s=document.createElement('script');s.src='./assets/admin-notify.js?v=55';s.dataset.adminNotify='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadV51Runtime(){
-  if(window.__KENZ_V51_RUNTIME__||document.querySelector('script[data-v51-runtime]'))return;
-  const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=54';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadExpenseApproval(){
-  const p=location.pathname.split('/').pop()||'index.html';
-  if(p==='admin-expenses.html')return;
-  if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
-  const s=document.createElement('script');s.src='./assets/expense-approval.js?v=54';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
-})();
-(function loadPurchaseV62(){
-  const p=location.pathname.split('/').pop()||'index.html';
-  if(p!=='expenses.html')return;
-  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v62]'))return;
-  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=62';s.dataset.purchaseV62='1';document.head.appendChild(s);
-})();
+(function loadV41(){if(window.__BAZ_V41__||document.querySelector('script[data-v41]'))return;const s=document.createElement('script');s.src='./assets/v41.js?v=41';s.dataset.v41='1';s.defer=true;document.head.appendChild(s)})();
+(function loadV42(){if(window.__BAZ_V42__||document.querySelector('script[data-v42]'))return;const s=document.createElement('script');s.src='./assets/v42.js?v=43';s.dataset.v42='1';s.defer=true;document.head.appendChild(s)})();
+(function loadV44(){if(window.__BAZ_V44__||document.querySelector('script[data-v44]'))return;const s=document.createElement('script');s.src='./assets/v44.js?v=49';s.dataset.v44='1';s.defer=true;document.head.appendChild(s)})();
+(function loadSprint2(){if(window.__KENZ_SPRINT2__||document.querySelector('script[data-sprint2]'))return;const s=document.createElement('script');s.src='./assets/sprint2.js?v=54';s.dataset.sprint2='1';s.defer=true;document.head.appendChild(s)})();
+(function loadNotifications(){if(window.__KENZ_NOTIFICATIONS__||document.querySelector('script[data-notifications]'))return;const s=document.createElement('script');s.src='./assets/notifications.js?v=55';s.dataset.notifications='1';s.defer=true;document.head.appendChild(s)})();
+(function loadGames(){if(window.__KENZ_GAMES__||document.querySelector('script[data-games]'))return;const s=document.createElement('script');s.src='./assets/games.js?v=54';s.dataset.games='1';s.defer=true;document.head.appendChild(s)})();
+(function loadAdminNotify(){if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;const s=document.createElement('script');s.src='./assets/admin-notify.js?v=55';s.dataset.adminNotify='1';s.defer=true;document.head.appendChild(s)})();
+(function loadV51Runtime(){if(window.__KENZ_V51_RUNTIME__||document.querySelector('script[data-v51-runtime]'))return;const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=54';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s)})();
+(function loadExpenseApproval(){const p=location.pathname.split('/').pop()||'index.html';if(p==='admin-expenses.html')return;if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;const s=document.createElement('script');s.src='./assets/expense-approval.js?v=63';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s)})();
+(function loadPurchaseV63(){const p=location.pathname.split('/').pop()||'index.html';if(p!=='expenses.html')return;if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v63]'))return;const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=63';s.dataset.purchaseV63='1';document.head.appendChild(s)})();
 
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
@@ -70,12 +30,11 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=62',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=63',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
-      setTimeout(check,300);
-      setInterval(check,20*60*1000);
+      setTimeout(check,300);setInterval(check,20*60*1000);
     }catch(e){console.warn('Auto update init failed',e)}
   }
   return{init,check};
@@ -95,14 +54,5 @@ async function v38SettleAfterCoreInit(){
     await new Promise(r=>setTimeout(r,50));
   }
 }
-
-function startAutoUpdateWhenIdle(){
-  const run=()=>BazAutoUpdate.init();
-  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:250});
-  else setTimeout(run,100);
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
-  v38SettleAfterCoreInit();
-  startAutoUpdateWhenIdle();
-});
+function startAutoUpdateWhenIdle(){const run=()=>BazAutoUpdate.init();if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:250});else setTimeout(run,100)}
+document.addEventListener('DOMContentLoaded',()=>{v38SettleAfterCoreInit();startAutoUpdateWhenIdle()});
