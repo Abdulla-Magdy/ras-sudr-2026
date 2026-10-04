@@ -12,13 +12,18 @@
     const byName=Object.fromEntries(items.map(x=>[norm(x.name),x]));
     cards.forEach(card=>{
       const name=norm(card.querySelector('.food-item-name')?.textContent);const item=byName[name];if(!item||!item.purchased)return;
-      card.querySelector('.sp62-price')?.remove();const d=document.createElement('div');const p=info(item.id);const unit=item.unit||'وحدة';
-      if(p.priced){d.className='sp62-price';d.innerHTML=`سعر الشراء${p.partial?' <span style="color:#f1d58f">• يوجد جزء قديم غير مفصل</span>':''}<span class="sum">${new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(p.qty)} ${unit} × ${money(p.avg)} = ${money(p.total)}</span>`}
-      else{d.className='sp62-price unpriced';d.textContent='سعر الشراء: غير متاح — فاتورة قديمة بدون تسعير تفصيلي'}
+      const p=info(item.id),unit=item.unit||'وحدة';
+      const cls=p.priced?'sp62-price':'sp62-price unpriced';
+      const html=p.priced
+        ?`سعر الشراء${p.partial?' <span style="color:#f1d58f">• يوجد جزء قديم غير مفصل</span>':''}<span class="sum">${new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(p.qty)} ${unit} × ${money(p.avg)} = ${money(p.total)}</span>`
+        :'سعر الشراء: غير متاح — فاتورة قديمة بدون تسعير تفصيلي';
+      let d=card.querySelector('.sp62-price');
+      if(d){if(d.className!==cls)d.className=cls;if(d.innerHTML!==html)d.innerHTML=html;return}
+      d=document.createElement('div');d.className=cls;d.innerHTML=html;
       const meta=card.querySelector('.food-item-meta');(meta||card.querySelector('.food-item-head'))?.insertAdjacentElement('afterend',d);
     });
   }
   async function load(){if(!window.TripDB?.isBound?.())return;try{[items,links]=await Promise.all([TripDB.list('shopping_items',{order:'sort_order'}),TripDB.list('expense_shopping_items')]);decorate()}catch(e){console.warn('[V62 shopping prices]',e)}}
-  async function start(){style();for(let i=0;i<120&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,80));await load();const body=$('#foodBody');if(body){new MutationObserver(()=>setTimeout(decorate,20)).observe(body,{childList:true,subtree:true})}setInterval(()=>{decorate()},700);setInterval(load,10000)}
+  async function start(){style();for(let i=0;i<120&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,80));await load();const body=$('#foodBody');if(body){new MutationObserver(()=>setTimeout(decorate,20)).observe(body,{childList:true,subtree:true})}setInterval(decorate,900);setInterval(load,10000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();window.addEventListener('pageshow',load);
 })();
