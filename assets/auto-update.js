@@ -1,19 +1,19 @@
-window.KENZ_APP_VERSION='V57';
-window.KENZ_APP_UPDATED_AT='04/10/2026 21:08';
+window.KENZ_APP_VERSION='V58';
+window.KENZ_APP_UPDATED_AT='04/10/2026 21:18';
 
 (function loadInformationArchitecture(){
   if(!document.querySelector('link[data-ia-css]')){
     const l=document.createElement('link');l.rel='stylesheet';l.href='./assets/information-architecture.css?v=54';l.dataset.iaCss='1';document.head.appendChild(l);
   }
   if(!document.querySelector('script[data-ia]')){
-    const s=document.createElement('script');s.src='./assets/information-architecture.js?v=54';s.dataset.ia='1';s.defer=true;document.head.appendChild(s);
+    const s=document.createElement('script');s.src='./assets/information-architecture.js?v=58';s.dataset.ia='1';s.defer=true;document.head.appendChild(s);
   }
 })();
 
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
   const s=document.createElement('script');
-  s.src='./assets/app-version.js?v=57';
+  s.src='./assets/app-version.js?v=58';
   s.dataset.appVersion='1';
   s.defer=true;
   document.head.appendChild(s);
@@ -55,11 +55,11 @@ window.KENZ_APP_UPDATED_AT='04/10/2026 21:08';
   if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;
   const s=document.createElement('script');s.src='./assets/expense-approval.js?v=54';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s);
 })();
-(function loadPurchaseLinesV57(){
+(function loadPurchaseV58(){
   const p=location.pathname.split('/').pop()||'index.html';
   if(!['expenses.html','admin-expenses.html'].includes(p))return;
-  if(window.__KENZ_PURCHASE_LINES__||document.querySelector('script[data-purchase-lines]'))return;
-  const s=document.createElement('script');s.src='./assets/purchase-lines.js?v=57';s.dataset.purchaseLines='1';s.defer=true;document.head.appendChild(s);
+  if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v58]'))return;
+  const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=58';s.dataset.purchaseV58='1';document.head.appendChild(s);
 })();
 
 window.BazAutoUpdate=(()=>{
@@ -68,11 +68,11 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=57',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=58',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
-      setTimeout(check,800);
+      setTimeout(check,500);
       setInterval(check,20*60*1000);
     }catch(e){console.warn('Auto update init failed',e)}
   }
@@ -96,8 +96,8 @@ async function v38SettleAfterCoreInit(){
 
 function startAutoUpdateWhenIdle(){
   const run=()=>BazAutoUpdate.init();
-  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:500});
-  else setTimeout(run,200);
+  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:300});
+  else setTimeout(run,120);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
