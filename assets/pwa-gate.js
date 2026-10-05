@@ -15,4 +15,12 @@
   const root=document.documentElement;
   root.classList.toggle('mobile-browser-gated',isMobile&&!isStandalone);
   root.classList.toggle('installed-pwa',isStandalone);
+
+  if(!document.querySelector('script[data-kenz-maintenance]')){
+    const base=location.pathname.replace(/[^/]*$/,'');
+    const s=document.createElement('script');
+    s.src=base+'assets/maintenance.js?v=65';
+    s.dataset.kenzMaintenance='1';
+    document.head.appendChild(s);
+  }
 })();
