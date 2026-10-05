@@ -1,14 +1,14 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>دخول الأشقياء — Ras Sudr</title><link rel="stylesheet" href="assets/style.css?v=20">
-<link rel="manifest" href="manifest.webmanifest?v=56"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="البز في الرحلة V2"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"><script src="assets/pwa-gate.js?v=20"></script></head><body>
+<link rel="manifest" href="manifest.webmanifest?v=67"><meta name="theme-color" content="#52358C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="البز في الرحلة V2"><link rel="apple-touch-icon" href="assets/icons/humidity-v66-192.jpg?v=67"><script src="assets/pwa-gate.js?v=68"></script></head><body>
 <main class="shell" style="max-width:720px;padding-top:55px">
   <section class="hero">
     <div class="eyebrow">AL ASHQEYA ACCESS 😎</div>
     <h1>دخول الأشقياء</h1>
     <div class="subtitle">اختار اسمك. أول مرة بس هتعمل PIN خاص بيك.</div>
     <div class="first-install-card" id="firstInstallCard">
-      <img src="assets/icons/app-icon-large.png" alt="البز في الرحلة V2" class="first-install-icon">
+      <img src="assets/icons/humidity-v66-192.jpg?v=67" alt="البز في الرحلة V2" class="first-install-icon">
       <div class="first-install-copy">
         <span class="first-install-kicker">أول مرة هنا؟</span>
         <strong>نزّل «البز في الرحلة V2» على موبايلك</strong>
@@ -19,7 +19,7 @@
   </section>
 <section id="installRequiredGate" class="install-required-gate">
   <div class="install-required-card">
-    <img src="assets/icons/app-icon-large.png" alt="البز في الرحلة V2" class="install-required-icon">
+    <img src="assets/icons/humidity-v66-192.jpg?v=67" alt="البز في الرحلة V2" class="install-required-icon">
     <span class="pill">MOBILE APP ONLY</span>
     <h2>نزّل «البز في الرحلة V2» الأول 📲</h2>
     <p>علشان تدخل من الموبايل لازم تضيف التطبيق على الشاشة الرئيسية. بعد التثبيت افتحه من الأيقونة، وساعتها هيظهر اختيار الاسم والـPIN.</p>
@@ -76,7 +76,7 @@ function pin4(v){ return /^\d{4}$/.test(v); }
     if(state.bound){ location.href="index.html"; return; }
 
     choices=await TripDB.loginChoices();
-    $("#memberSelect").innerHTML='<option value="">اختار اسمك...</option>'+
+    $("#memberSelect").innerHTML='<option value="">اختار اسمك...</option>'+ 
       choices.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");
 
     $("#memberSelect").onchange=()=>{
@@ -132,4 +132,4 @@ function pin4(v){ return /^\d{4}$/.test(v); }
     message("محتاجين نكمل إعداد Supabase الأول: "+(e.message||e),true);
   }
 })();
-</script><script src="assets/install.js?v=20"></script><script src="assets/auto-update.js?v=56"></script></body></html>
+</script><script src="assets/install.js?v=39"></script><script src="assets/auto-update.js?v=68"></script></body></html>
