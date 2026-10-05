@@ -71,6 +71,11 @@ function message(t,bad=false){
 function pin4(v){ return /^\d{4}$/.test(v); }
 
 (async()=>{
+  // Important: when the page is opened in a mobile browser only the install gate
+  // should run. Do not initialize the remembered member session here, otherwise a
+  // bound browser session redirects to index.html and pwa-gate sends it back here,
+  // creating an endless loading/redirect loop.
+  if(window.BAZ_PWA_GATE?.isMobile && !window.BAZ_PWA_GATE?.isStandalone) return;
   try{
     const state=await TripDB.init();
     if(state.bound){ location.href="index.html"; return; }
