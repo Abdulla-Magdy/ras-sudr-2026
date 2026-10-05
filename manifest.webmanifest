@@ -12,19 +12,19 @@
   "theme_color": "#071822",
   "icons": [
     {
-      "src": "assets/icons/humidity-v66-192.jpg",
+      "src": "assets/icons/humidity-v66-192.jpg?v=67",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/humidity-v66-512.jpg",
+      "src": "assets/icons/humidity-v66-512.jpg?v=67",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/humidity-v66-512.jpg",
+      "src": "assets/icons/humidity-v66-512.jpg?v=67",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "maskable"
