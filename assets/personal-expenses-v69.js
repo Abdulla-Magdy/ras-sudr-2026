@@ -2,7 +2,6 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
 
 (()=>{
   const $=s=>document.querySelector(s);
-  const $$=s=>[...document.querySelectorAll(s)];
   let me=null,trip=null,members=[],sharedExpenses=[],personalExpenses=[],comments=[];
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -212,8 +211,9 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
 
   async function addComment(expenseId,body,isDispute=false){
     const text=String(body||"").trim();
-    if(!text){say(isDispute?"اكتب المشكلة الأول":"اكتب تعليق الأول");return}
+    if(!text){say(isDispute?"اكتب المشكلة الأول":"اكتب تعليق الأول");return false}
     await TripDB.insert("personal_expense_comments",{expense_id:expenseId,author_member_id:me.id,body:text,is_dispute:!!isDispute});
+    return true;
   }
 
   function bindActions(){
@@ -247,13 +247,15 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
         }else if(action==="submit-dispute"){
           const input=document.querySelector(`[data-dispute-text="${id}"]`);
           btn.disabled=true;
-          await addComment(id,input?.value,true);
+          const sent=await addComment(id,input?.value,true);
+          if(!sent){btn.disabled=false;return}
           say("الملاحظة اتبعتت له ⚠️");
           await refresh();
         }else if(action==="comment"){
           const input=document.querySelector(`[data-comment-input="${id}"]`);
           btn.disabled=true;
-          await addComment(id,input?.value,false);
+          const sent=await addComment(id,input?.value,false);
+          if(!sent){btn.disabled=false;return}
           say("التعليق اتبعت 💬");
           await refresh();
         }
