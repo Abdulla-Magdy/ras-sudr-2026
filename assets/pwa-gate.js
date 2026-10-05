@@ -5,13 +5,16 @@
   const pathname=location.pathname.toLowerCase();
   const file=pathname.split('/').pop()||'';
   const onLogin=file==='login.html';
-  const gateLanding=onLogin||pathname.endsWith('/');
   window.BAZ_PWA_GATE={isMobile,isStandalone};
-  if(isMobile&&!isStandalone&&!gateLanding){
+
+  // On mobile browsers, every route (including the site root) must go through
+  // the install-only login gate. Installed PWA sessions are allowed through.
+  if(isMobile&&!isStandalone&&!onLogin){
     const base=location.pathname.replace(/[^/]*$/,'');
-    location.replace(base+'login.html?install=1');
+    location.replace(base+'login.html?install=1&v=68');
     return;
   }
+
   const root=document.documentElement;
   root.classList.toggle('mobile-browser-gated',isMobile&&!isStandalone);
   root.classList.toggle('installed-pwa',isStandalone);
