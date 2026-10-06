@@ -2,8 +2,8 @@
   if (window.__BAZ_V38__) return;
   window.__BAZ_V38__ = true;
 
-  const VERSION='V58';
-  const UPDATED_AT='06/10/2026 21:03';
+  const VERSION='V60';
+  const UPDATED_AT='06/10/2026 23:35';
   const ROUTES=new Set(['index.html','shopping.html','meals.html','my-tasks.html','responsibilities.html','expenses.html','crew.html','ideas.html','bag.html','location.html']);
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -18,6 +18,7 @@
   }
   function me(){return window.TripDB?.getMember?.()||null}
   function trip(){return window.TripDB?.getTrip?.()||null}
+  function destinationMapsUrl(dest){if(dest?.destination_url)return dest.destination_url;if(dest?.destination_lat!=null&&dest?.destination_lng!=null)return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${dest.destination_lat},${dest.destination_lng}`)}`;return ''}
   function admin(){return !!window.TripDB?.isAdmin?.()}
   async function db(){if(client)return client;const c=window.SUPABASE_CONFIG||{};if(!window.supabase||!c.url||!c.key)return null;client=window.supabase.createClient(c.url,c.key);try{await client.auth.getSession()}catch(_){}return client}
   function toast(t){if(window.toast)window.toast(t);else alert(t)}
@@ -81,6 +82,7 @@
     if($('#homeExpenseTotal'))$('#homeExpenseTotal').textContent=money(total);
     if($('#homeBagProgress'))$('#homeBagProgress').textContent=`${packed}/${myBag.length}`;
     if($('#homeDays'))$('#homeDays').textContent=Math.max(0,Math.ceil((new Date('2026-10-06T23:00:00+03:00')-Date.now())/86400000)).toLocaleString('ar-EG');
+    const homeMaps=$('#homeMapsOpen');if(homeMaps){try{const c=await db(),tr=trip();let dest=null;if(c&&tr){const r=await c.from('trips').select('destination_url,destination_label,destination_lat,destination_lng').eq('id',tr.id).single();dest=r.data||null}const url=destinationMapsUrl(dest);homeMaps.href=url||'#';homeMaps.style.display=url?'flex':'none';const label=$('#homeMapsLabel');if(label&&dest?.destination_label)label.textContent=`افتح ${dest.destination_label} واتجاهات الطريق مباشرة`}catch(_){homeMaps.style.display='none'}}
     const host=$('#homeTasks');if(host){const tasks=[...mine.slice(0,4).map(x=>({href:`shopping.html?item=${encodeURIComponent(x.id)}`,ico:'🛒',title:x.name,sub:`مشترياتك${x.planned_qty?` • ${x.planned_qty} ${x.unit||''}`:''}`})),...bagOpen.slice(0,2).map(x=>({href:'bag.html',ico:'🎒',title:x.item_name,sub:'لسه مش في الشنطة'}))].slice(0,5);host.innerHTML=tasks.length?tasks.map(t=>`<a class="v38-task-link" href="${t.href}"><span class="task-ico">${t.ico}</span><div><strong>${esc(t.title)}</strong><small>${esc(t.sub)}</small></div></a>`).join(''):'<div class="v38-empty">مفيش حاجة معلقة عليك دلوقتي 👌</div>'}
   }
 
@@ -134,7 +136,7 @@
   }
   function clearLocationUi(){if(locState.map){try{locState.map.remove()}catch(_){}locState.map=null}if(locState.channel){try{client?.removeChannel(locState.channel)}catch(_){}locState.channel=null}clearInterval(locState.interval);locState.interval=null;locState.markers=new Map();locState.destMarker=null;locState.route=null}
   async function initLocation(){
-    if(route()!=='location.html'||!$('#liveMap'))return;clearLocationUi();if(!(await ensureLeaflet())){$('#liveMap').innerHTML='<div class="v38-empty">الخريطة محتاجة إنترنت عشان تتحمل.</div>';return}const c=await db(),tr=trip(),member=me();if(!c||!tr||!member)return;const map=L.map('liveMap',{zoomControl:true}).setView([29.9,32.7],7);locState.map=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);const {data:dest}=await c.from('trips').select('destination_url,destination_label,destination_lat,destination_lng').eq('id',tr.id).single();window.__V38_DEST__=dest||{};const maps=$('#v38MapsOpen');if(maps){maps.href=dest?.destination_url||'#';maps.style.display=dest?.destination_url?'flex':'none'}if(dest?.destination_lat!=null&&dest?.destination_lng!=null){locState.destMarker=L.marker([dest.destination_lat,dest.destination_lng]).addTo(map).bindPopup(dest.destination_label||'القرية').bindTooltip(dest.destination_label||'القرية',{permanent:true,direction:'top',className:'live-name-tooltip'})}
+    if(route()!=='location.html'||!$('#liveMap'))return;clearLocationUi();if(!(await ensureLeaflet())){$('#liveMap').innerHTML='<div class="v38-empty">الخريطة محتاجة إنترنت عشان تتحمل.</div>';return}const c=await db(),tr=trip(),member=me();if(!c||!tr||!member)return;const map=L.map('liveMap',{zoomControl:true}).setView([29.9,32.7],7);locState.map=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);const {data:dest}=await c.from('trips').select('destination_url,destination_label,destination_lat,destination_lng').eq('id',tr.id).single();window.__V38_DEST__=dest||{};const maps=$('#v38MapsOpen');if(maps){const url=destinationMapsUrl(dest);maps.href=url||'#';maps.style.display=url?'flex':'none'}if(dest?.destination_lat!=null&&dest?.destination_lng!=null){locState.destMarker=L.marker([dest.destination_lat,dest.destination_lng]).addTo(map).bindPopup(dest.destination_label||'القرية').bindTooltip(dest.destination_label||'القرية',{permanent:true,direction:'top',className:'live-name-tooltip'})}
     async function members(){const {data}=await c.from('members').select('id,name').eq('trip_id',tr.id);return data||[]}
     const fmt=iso=>{const sec=Math.max(0,Math.floor((Date.now()-new Date(iso).getTime())/1000));return sec<60?`من ${sec} ث`:sec<3600?`من ${Math.floor(sec/60)} د`:`من ${Math.floor(sec/3600)} س`};
     async function drawRoute(lat,lng){if(!dest||dest.destination_lat==null||dest.destination_lng==null)return;try{const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${dest.destination_lng},${dest.destination_lat}?overview=full&geometries=geojson`);const j=await r.json();const coords=j.routes?.[0]?.geometry?.coordinates;if(!coords)return;if(locState.route)map.removeLayer(locState.route);locState.route=L.polyline(coords.map(x=>[x[1],x[0]]),{weight:5,opacity:.7}).addTo(map)}catch(e){}}
