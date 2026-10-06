@@ -185,6 +185,13 @@ window.TripDB = (() => {
     return data;
   }
 
+  async function pendingPurchaseItemIds(){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc("pending_purchase_item_ids");
+    if(error) throw error;
+    return Array.isArray(data)?data:[];
+  }
+
   async function leftovers(){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
     const {data,error}=await client.rpc("trip_leftovers");
@@ -245,7 +252,7 @@ window.TripDB = (() => {
   return {
     init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminAddMember,adminSetMemberConfirmed,adminResetRequests,
     forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
-    upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,leftovers,setLeftoverRemaining,claimLeftover,
+    upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,pendingPurchaseItemIds,leftovers,setLeftoverRemaining,claimLeftover,
     removeLeftoverAllocation,setLeftoverStatus,leftoverCharges,recentChanges,subscribe
   };
 })();
