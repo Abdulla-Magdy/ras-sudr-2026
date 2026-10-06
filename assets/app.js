@@ -425,21 +425,42 @@ function updatePurchaseBatchButtonState(){
 async function renderPurchaseQueue(){
   const box=$("#purchaseQueue"); if(!box) return;
 
-  const items=DBLIVE?await TripDB.list("shopping_items",{order:"sort_order"}):[];
-  let pendingIds=[];
-  if(DBLIVE && typeof TripDB.pendingPurchaseItemIds==="function"){
-    try{ pendingIds=await TripDB.pendingPurchaseItemIds(); }catch(e){ console.warn("Pending purchase lookup failed:",e); }
-  }
-  const pendingSet=new Set(pendingIds||[]);
   const payerId=IS_ADMIN?($("#purchaseQueuePayer")?.value||CURRENT_MEMBER.id):CURRENT_MEMBER.id;
-  const eligible=items.filter(x=>
-    !x.purchased &&
-    !pendingSet.has(x.id) &&
-    (
-      x.responsible_member_id===payerId ||
-      (IS_ADMIN && !x.responsible_member_id)
-    )
-  );
+  let eligible=[];
+  if(DBLIVE && typeof TripDB.purchaseQueueItems==="function"){
+    try{
+      eligible=await TripDB.purchaseQueueItems(payerId);
+    }catch(e){
+      console.warn("Server purchase queue failed, using fallback:",e);
+      const items=await TripDB.list("shopping_items",{order:"sort_order"});
+      let pendingIds=[];
+      try{ pendingIds=typeof TripDB.pendingPurchaseItemIds==="function"?await TripDB.pendingPurchaseItemIds():[]; }catch(_){}
+      const pendingSet=new Set(pendingIds||[]);
+      eligible=items.filter(x=>
+        !x.purchased &&
+        !pendingSet.has(x.id) &&
+        (
+          x.responsible_member_id===payerId ||
+          (IS_ADMIN && !x.responsible_member_id)
+        )
+      );
+    }
+  }else{
+    const items=DBLIVE?await TripDB.list("shopping_items",{order:"sort_order"}):[];
+    let pendingIds=[];
+    if(DBLIVE && typeof TripDB.pendingPurchaseItemIds==="function"){
+      try{ pendingIds=await TripDB.pendingPurchaseItemIds(); }catch(e){ console.warn("Pending purchase lookup failed:",e); }
+    }
+    const pendingSet=new Set(pendingIds||[]);
+    eligible=items.filter(x=>
+      !x.purchased &&
+      !pendingSet.has(x.id) &&
+      (
+        x.responsible_member_id===payerId ||
+        (IS_ADMIN && !x.responsible_member_id)
+      )
+    );
+  }
 
   if($("#purchaseQueuePayer")){
     $("#purchaseQueuePayer").innerHTML=memberOptions();
