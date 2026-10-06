@@ -1,8 +1,8 @@
 
-const TRIP_DATE=new Date("2026-10-07T00:00:00+03:00"),$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const TRIP_DATE=new Date("2026-10-06T23:00:00+03:00"),$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let DBLIVE=false, MEMBERS=[], CATEGORIES=[], CURRENT_MEMBER=null, IS_ADMIN=false;
 
-function countdown(){if(!$("#days"))return;let x=Math.max(0,TRIP_DATE-new Date()),d=Math.floor(x/86400000),h=Math.floor(x%86400000/3600000),m=Math.floor(x%3600000/60000),s=Math.floor(x%60000/1000);$("#days").textContent=String(d).padStart(2,"0");$("#hours").textContent=String(h).padStart(2,"0");$("#minutes").textContent=String(m).padStart(2,"0");$("#seconds").textContent=String(s).padStart(2,"0")}
+function countdown(){let x=Math.max(0,TRIP_DATE-new Date()),d=Math.floor(x/86400000),h=Math.floor(x%86400000/3600000),m=Math.floor(x%3600000/60000),s=Math.floor(x%60000/1000);if($("#days"))$("#days").textContent=String(d).padStart(2,"0");if($("#hours"))$("#hours").textContent=String(h).padStart(2,"0");if($("#minutes"))$("#minutes").textContent=String(m).padStart(2,"0");if($("#seconds"))$("#seconds").textContent=String(s).padStart(2,"0");if($("#homeDays")){if(x<=0){$("#homeDays").textContent="🚗";if($("#homeCountdownLabel"))$("#homeCountdownLabel").innerHTML="انطلقنا<br>يا أشقياء";}else if(x<86400000){$("#homeDays").textContent=`${h}:${String(m).padStart(2,"0")}`;if($("#homeCountdownLabel"))$("#homeCountdownLabel").innerHTML="ساعة:دقيقة<br>على التحرك";}else{$("#homeDays").textContent=String(Math.ceil(x/86400000));if($("#homeCountdownLabel"))$("#homeCountdownLabel").innerHTML="يوم<br>على التحرك";}}}
 setInterval(countdown,1000);countdown();
 
 function activateNav(){let p=location.pathname.split("/").pop()||"index.html";$$("[data-page]").forEach(a=>a.classList.toggle("active",a.dataset.page===p))}
