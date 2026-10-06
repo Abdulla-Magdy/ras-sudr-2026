@@ -2,8 +2,8 @@
   if (window.__BAZ_V38__) return;
   window.__BAZ_V38__ = true;
 
-  const VERSION='V38';
-  const UPDATED_AT='24/09/2026 00:45';
+  const VERSION='V58';
+  const UPDATED_AT='06/10/2026 21:03';
   const ROUTES=new Set(['index.html','shopping.html','meals.html','my-tasks.html','responsibilities.html','expenses.html','crew.html','ideas.html','bag.html','location.html']);
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -75,12 +75,12 @@
     const [items,expenses,bag,members]=await Promise.all([TripDB.list('shopping_items',{order:'sort_order'}),TripDB.list('expenses',{order:'created_at',asc:false}),TripDB.list('private_packing_items',{order:'created_at',asc:true}).catch(()=>[]),TripDB.list('members',{order:'sort_order'})]);
     const open=items.filter(x=>!x.purchased),unassigned=open.filter(x=>!x.responsible_member_id),mine=open.filter(x=>x.responsible_member_id===member.id),myBag=bag.filter(x=>(!x.owner_member_id||x.owner_member_id===member.id)),bagOpen=myBag.filter(x=>!x.packed),packed=myBag.filter(x=>x.packed).length,total=expenses.reduce((s,x)=>s+Number(x.amount||0),0),confirmed=members.filter(x=>x.confirmed!==false).length;
     if($('#homeHello'))$('#homeHello').textContent=`أهلاً يا ${member.name}${admin()?' 👑':''}`;
-    if($('#homeMeta'))$('#homeMeta').textContent=`${confirmed.toLocaleString('ar-EG')} أشقياء مؤكدين • الأربعاء 7 أكتوبر`;
+    if($('#homeMeta'))$('#homeMeta').textContent=`${confirmed.toLocaleString('ar-EG')} أشقياء مؤكدين • الثلاثاء 6 أكتوبر • التحرك 11:00 م`;
     if($('#homeShoppingCount'))$('#homeShoppingCount').textContent=open.length.toLocaleString('ar-EG');
     if($('#homeShoppingSub'))$('#homeShoppingSub').innerHTML=`حاجة لسه مطلوبة<br>${unassigned.length.toLocaleString('ar-EG')} من غير مسؤول`;
     if($('#homeExpenseTotal'))$('#homeExpenseTotal').textContent=money(total);
     if($('#homeBagProgress'))$('#homeBagProgress').textContent=`${packed}/${myBag.length}`;
-    if($('#homeDays'))$('#homeDays').textContent=Math.max(0,Math.ceil((new Date('2026-10-07T00:00:00+03:00')-Date.now())/86400000)).toLocaleString('ar-EG');
+    if($('#homeDays'))$('#homeDays').textContent=Math.max(0,Math.ceil((new Date('2026-10-06T23:00:00+03:00')-Date.now())/86400000)).toLocaleString('ar-EG');
     const host=$('#homeTasks');if(host){const tasks=[...mine.slice(0,4).map(x=>({href:`shopping.html?item=${encodeURIComponent(x.id)}`,ico:'🛒',title:x.name,sub:`مشترياتك${x.planned_qty?` • ${x.planned_qty} ${x.unit||''}`:''}`})),...bagOpen.slice(0,2).map(x=>({href:'bag.html',ico:'🎒',title:x.item_name,sub:'لسه مش في الشنطة'}))].slice(0,5);host.innerHTML=tasks.length?tasks.map(t=>`<a class="v38-task-link" href="${t.href}"><span class="task-ico">${t.ico}</span><div><strong>${esc(t.title)}</strong><small>${esc(t.sub)}</small></div></a>`).join(''):'<div class="v38-empty">مفيش حاجة معلقة عليك دلوقتي 👌</div>'}
   }
 
