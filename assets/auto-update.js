@@ -1,4 +1,4 @@
-window.KENZ_APP_VERSION='V69';
+window.KENZ_APP_VERSION='V70';
 window.KENZ_APP_UPDATED_AT='06/10/2026';
 
 (function loadInformationArchitecture(){
@@ -11,7 +11,7 @@ window.KENZ_APP_UPDATED_AT='06/10/2026';
 })();
 (function loadVersionBadge(){
   if(window.__KENZ_APP_VERSION_BADGE__||document.querySelector('script[data-app-version]'))return;
-  const s=document.createElement('script');s.src='./assets/app-version.js?v=69';s.dataset.appVersion='1';s.defer=true;document.head.appendChild(s);
+  const s=document.createElement('script');s.src='./assets/app-version.js?v=70';s.dataset.appVersion='1';s.defer=true;document.head.appendChild(s);
 })();
 (function loadMaintenance(){if(window.__KENZ_MAINTENANCE__||document.querySelector('script[data-kenz-maintenance]'))return;const s=document.createElement('script');s.src='./assets/maintenance.js?v=65';s.dataset.kenzMaintenance='1';s.defer=true;document.head.appendChild(s)})();
 (function loadV41(){if(window.__BAZ_V41__||document.querySelector('script[data-v41]'))return;const s=document.createElement('script');s.src='./assets/v41.js?v=41';s.dataset.v41='1';s.defer=true;document.head.appendChild(s)})();
@@ -23,7 +23,7 @@ window.KENZ_APP_UPDATED_AT='06/10/2026';
 (function loadAdminNotify(){if(window.__KENZ_ADMIN_NOTIFY__||document.querySelector('script[data-admin-notify]'))return;const s=document.createElement('script');s.src='./assets/admin-notify.js?v=55';s.dataset.adminNotify='1';s.defer=true;document.head.appendChild(s)})();
 (function loadV51Runtime(){if(window.__KENZ_V51_RUNTIME__||document.querySelector('script[data-v51-runtime]'))return;const s=document.createElement('script');s.src='./assets/v51-runtime.js?v=54';s.dataset.v51Runtime='1';s.defer=true;document.head.appendChild(s)})();
 (function loadExpenseApproval(){const p=location.pathname.split('/').pop()||'index.html';if(p==='admin-expenses.html')return;if(window.__KENZ_EXPENSE_APPROVAL__||document.querySelector('script[data-expense-approval]'))return;const s=document.createElement('script');s.src='./assets/expense-approval.js?v=63';s.dataset.expenseApproval='1';s.defer=true;document.head.appendChild(s)})();
-(function loadPurchaseV64(){const p=location.pathname.split('/').pop()||'index.html';if(p!=='expenses.html')return;if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v64]'))return;const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=63';s.dataset.purchaseV64='1';document.head.appendChild(s)})();
+(function loadPurchaseV64(){const p=location.pathname.split('/').pop()||'index.html';if(p!=='expenses.html')return;if(window.__KENZ_PURCHASE_V58__||document.querySelector('script[data-purchase-v64]'))return;const s=document.createElement('script');s.src='./assets/purchase-v58.js?v=70';s.dataset.purchaseV64='1';document.head.appendChild(s)})();
 
 window.BazAutoUpdate=(()=>{
   let registration=null,reloading=false;
@@ -31,7 +31,7 @@ window.BazAutoUpdate=(()=>{
   async function init(){
     if(!('serviceWorker'in navigator))return;
     try{
-      registration=await navigator.serviceWorker.register('./service-worker.js?v=69',{updateViaCache:'none'});
+      registration=await navigator.serviceWorker.register('./service-worker.js?v=70',{updateViaCache:'none'});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
       window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')check()});
       navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});
