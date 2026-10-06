@@ -144,13 +144,37 @@
 
   function syncPendingShoppingDom(){
     if(page()!=='expenses.html')return;
-    $$('.purchase-item-check').forEach(ch=>{
+    const checks=$('.purchase-item-check');
+    checks.forEach(ch=>{
       const pending=localPendingItemIds.has(ch.value);
       ch.disabled=pending;
       ch.checked=pending?false:ch.checked;
       const row=ch.closest('.purchase-queue-item');
-      if(row)row.classList.toggle('ea52-pending-shopping',pending);
+      if(row){
+        row.classList.toggle('ea52-pending-shopping',pending);
+        row.style.display=pending?'none':'';
+      }
     });
+
+    const visible=checks.filter(ch=>{
+      const row=ch.closest('.purchase-queue-item');
+      return row && row.style.display!=='none';
+    });
+    const count=$('#purchaseQueueCount');
+    if(count)count.textContent=`${visible.length} جاهزين للتسجيل`;
+
+    let empty=$('#ea52NoReadyPurchases');
+    if(checks.length && !visible.length){
+      if(!empty){
+        empty=document.createElement('div');
+        empty.id='ea52NoReadyPurchases';
+        empty.className='empty-finance';
+        empty.textContent='كل المشتريات المسجلة حاليًا مستنية اعتماد الأدمن ⏳';
+        $('#purchaseQueue')?.appendChild(empty);
+      }
+    }else{
+      empty?.remove();
+    }
   }
 
   async function review(id,approve){
