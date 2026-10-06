@@ -39,7 +39,7 @@
     const footer=$('.purchase-batch-footer');
     if(footer && !footer.querySelector('.pv58-hint')){
       const h=document.createElement('div'); h.className='pv58-hint';
-      h.textContent='لكل صنف: اكتب الكمية الفعلية وسعر الوحدة. إجمالي الفاتورة بيتحسب تلقائيًا.';
+      h.textContent='لكل صنف: اكتب الكمية الفعلية وإجمالي سعر الكمية. هنحسب سعر الوحدة تلقائيًا.';
       footer.prepend(h);
     }
 
@@ -50,7 +50,7 @@
         const q=Number(item.actual_qty || item.planned_qty || 1) || 1;
         const d=document.createElement('div');
         d.className='pv58-line';
-        d.innerHTML=`<label><span>الكمية الفعلية</span><input class="qty-input pv58-qty" type="number" min="0.01" step="0.01" inputmode="decimal" value="${q}"></label><label><span>سعر الوحدة</span><input class="amount-input pv58-price" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0"></label><strong class="pv58-line-total">0 ج</strong>`;
+        d.innerHTML=`<label><span>الكمية الفعلية</span><input class="qty-input pv58-qty" type="number" min="0.01" step="0.01" inputmode="decimal" value="${q}"></label><label><span>إجمالي سعر الكمية</span><input class="amount-input pv58-price" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="مثال: 900"></label><strong class="pv58-line-total">0 ج</strong>`;
         row.appendChild(d);
         d.querySelectorAll('input').forEach(i=>i.addEventListener('input',recalc));
         cb.addEventListener('change',()=>setTimeout(recalc,0));
@@ -63,8 +63,10 @@
     return $$('.purchase-item-check:checked').map(cb=>{
       const row=rowFor(cb);
       const qty=Number(row?.querySelector('.pv58-qty')?.value || 0);
-      const price=Number(row?.querySelector('.pv58-price')?.value || 0);
-      return {item_id:cb.value, quantity:qty, unit_price:price, line_total:Math.round(qty*price*100)/100, row};
+      const enteredTotal=Number(row?.querySelector('.pv58-price')?.value || 0);
+      const lineTotal=Math.round(enteredTotal*100)/100;
+      const unitPrice=qty>0 ? lineTotal/qty : 0;
+      return {item_id:cb.value, quantity:qty, unit_price:unitPrice, line_total:lineTotal, row};
     });
   }
 
@@ -77,14 +79,14 @@
     });
     const lines=selectedLines();
     const total=Math.round(lines.reduce((s,l)=>s+l.line_total,0)*100)/100;
-    const valid=lines.length>0 && lines.every(l=>l.quantity>0 && l.unit_price>0);
-    lines.forEach(l=>{ const t=l.row?.querySelector('.pv58-line-total'); if(t)t.textContent=money(l.line_total); });
+    const valid=lines.length>0 && lines.every(l=>l.quantity>0 && l.line_total>0);
+    lines.forEach(l=>{ const t=l.row?.querySelector('.pv58-line-total'); if(t)t.textContent=`${new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(l.quantity)} × ${money(l.unit_price)} = ${money(l.line_total)}`; });
     const amount=$('#purchaseBatchAmount'); if(amount) amount.value=total ? String(total) : '';
     const counter=$('#selectedPurchaseCount'); if(counter) counter.textContent=`${lines.length} مختارين • ${money(total)}`;
     const btn=$('#recordPurchaseBatch');
     if(btn){
       btn.disabled=!valid || submitting;
-      btn.textContent=valid ? `✓ سجل الفاتورة — ${money(total)}` : (lines.length ? 'كمّل الكمية والسعر لكل صنف' : 'اختار المشتريات الأول');
+      btn.textContent=valid ? `✓ سجل الفاتورة — ${money(total)}` : (lines.length ? 'كمّل الكمية وإجمالي سعر كل صنف' : 'اختار المشتريات الأول');
     }
   }
 
@@ -101,7 +103,7 @@
     if(submitting) return;
     const lines=selectedLines();
     if(!lines.length){ window.toast?.('اختار المشتريات الأول'); return; }
-    if(lines.some(l=>l.quantity<=0 || l.unit_price<=0)){ window.toast?.('اكتب الكمية والسعر لكل صنف'); return; }
+    if(lines.some(l=>l.quantity<=0 || l.line_total<=0)){ window.toast?.('اكتب الكمية وإجمالي سعر كل صنف'); return; }
     const total=Math.round(lines.reduce((s,l)=>s+l.line_total,0)*100)/100;
     const payerId=window.TripDB?.isAdmin?.() ? ($('#purchaseQueuePayer')?.value || window.TripDB.getMember()?.id) : window.TripDB?.getMember?.()?.id;
     const note=$('#purchaseBatchNote')?.value.trim() || null;
@@ -119,7 +121,7 @@
     }catch(e){
       console.error('[V58 purchase]',e);
       const m=String(e?.message||e||'');
-      const msg=m.includes('ITEM_PENDING_APPROVAL')?'في صنف منهم مستني اعتماد بالفعل':m.includes('PURCHASE_TOTAL_MISMATCH')?'راجع أسعار الأصناف':m.includes('ITEM_ALREADY_PURCHASED')?'في صنف متسجل كمشترى بالفعل':m.includes('ITEM_NOT_ASSIGNED_TO_PAYER')?'في صنف مش مسؤول عنه الشخص المختار':m.includes('ITEM_PRICES_REQUIRED')?'لازم تسجل سعر وكمية كل صنف':'حصلت مشكلة في تسجيل الفاتورة';
+      const msg=m.includes('ITEM_PENDING_APPROVAL')?'في صنف منهم مستني اعتماد بالفعل':m.includes('PURCHASE_TOTAL_MISMATCH')?'راجع أسعار الأصناف':m.includes('ITEM_ALREADY_PURCHASED')?'في صنف متسجل كمشترى بالفعل':m.includes('ITEM_NOT_ASSIGNED_TO_PAYER')?'في صنف مش مسؤول عنه الشخص المختار':m.includes('ITEM_PRICES_REQUIRED')?'لازم تسجل الكمية وإجمالي سعر كل صنف':'حصلت مشكلة في تسجيل الفاتورة';
       window.toast?.(msg);
       submitting=false; recalc();
     }
