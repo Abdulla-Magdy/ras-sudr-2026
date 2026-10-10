@@ -1,0 +1,74 @@
+begin;
+-- Fixtures and all side effects are rolled back, including notification queue entries.
+do $$
+declare t uuid:=gen_random_uuid(); a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); c uuid:=gen_random_uuid(); ua uuid:=gen_random_uuid(); ub uuid:=gen_random_uuid(); uc uuid:=gen_random_uuid(); e uuid; cat uuid; req uuid;
+begin
+ insert into auth.users(id) values(ua),(ub),(uc);
+ insert into public.trips(id,slug,name) values(t,'qa-closeout-'||t,'QA closeout');
+ insert into public.trip_closeouts(trip_id) values(t);
+ insert into public.members(id,trip_id,name,access_role,sort_order) values(a,t,'QA creditor','admin',1),(b,t,'QA debtor','member',2),(c,t,'QA reverse','member',3);
+ insert into public.device_sessions(auth_user_id,member_id) values(ua,a),(ub,b),(uc,c);
+ insert into public.categories(trip_id,name) values(t,'QA category') returning id into cat;
+ perform set_config('request.jwt.claim.sub',ua::text,true);
+ req:=public.submit_expense_for_approval(a,cat,3000,'QA approved fixture');
+ perform public.admin_review_expense_request(req,true,'QA approved');
+ perform set_config('request.jwt.claim.sub','',true);
+ insert into public.personal_expenses(trip_id,payer_member_id,beneficiary_member_id,description,amount) values(t,b,a,'QA shoes',200),(t,a,b,'QA own purchase',50),(t,c,a,'QA reverse purchase',1200);
+ perform set_config('qa.trip',t::text,true);perform set_config('qa.a',a::text,true);perform set_config('qa.b',b::text,true);perform set_config('qa.c',c::text,true);
+ perform set_config('qa.ua',ua::text,true);perform set_config('qa.ub',ub::text,true);perform set_config('qa.uc',uc::text,true);
+end $$;
+set local role authenticated;
+do $$
+declare d jsonb; n jsonb; tr uuid; tr2 uuid; states jsonb; total_net bigint; denied boolean;
+begin
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ub'),true);
+ denied:=false;begin perform public.close_trip_accounts(true);exception when others then if SQLERRM='ADMIN_REQUIRED' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL nonadmin close';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ua'),true);
+ d:=public.close_trip_accounts(true);
+ if d->>'status'<>'closed' or jsonb_array_length(d->'transfers')<>2 then raise exception 'FAIL close snapshot %',d;end if;
+ select sum((x->>'net')::bigint) into total_net from jsonb_array_elements(d->'live'->'people') x;
+ if total_net<>0 then raise exception 'FAIL balancing';end if;
+ denied:=false;begin update public.expenses set amount=3001 where trip_id=current_setting('qa.trip')::uuid;exception when others then if SQLERRM='TRIP_ACCOUNTS_CLOSED' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL finance lock';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ub'),true);
+ n:=public.my_trip_netting()->0;tr:=(n->>'transfer_id')::uuid;
+ if (n->>'net')::bigint<>85000 or jsonb_array_length(n->'items')<>2 then raise exception 'FAIL subtraction/addition %',n;end if;
+ denied:=false;begin perform public.submit_trip_netting(tr,jsonb_set(n,'{net}','1'));exception when others then if SQLERRM='NETTING_CHANGED' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL stale preview';end if;
+ perform public.submit_trip_netting(tr,n);
+ denied:=false;begin perform public.trip_transfer_action(tr,'confirm');exception when others then if SQLERRM='INVALID_TRANSFER_ACTION' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL self confirm';end if;
+ denied:=false;begin update public.personal_expenses set amount=201 where id=(select (x->>'id')::uuid from jsonb_array_elements(n->'items') x where x->>'direction'='subtract' limit 1);exception when others then if SQLERRM='PERSONAL_EXPENSE_IN_SETTLEMENT' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL locked personal expense';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.uc'),true);
+ if public.my_personal_offset_states()<>'[]'::jsonb then raise exception 'FAIL private offset leakage';end if;
+ if exists(select 1 from jsonb_array_elements(public.my_trip_netting()) x where x->>'transfer_id'=tr::text) then raise exception 'FAIL private netting leakage';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ua'),true);
+ denied:=false;begin perform public.reopen_trip_accounts('QA reopen');exception when others then if SQLERRM='UNCONFIRMED_TRANSFERS' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL pending reopen';end if;
+ perform public.trip_transfer_action(tr,'confirm');
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ub'),true);
+ states:=public.my_personal_offset_states();
+ if jsonb_array_length(states)<>2 or exists(select 1 from jsonb_array_elements(states) x where x->>'status'<>'settled') then raise exception 'FAIL double count protection';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.uc'),true);
+ n:=public.my_trip_netting()->0;tr2:=(n->>'transfer_id')::uuid;
+ if (n->>'net')::bigint<>-20000 then raise exception 'FAIL reverse arithmetic';end if;
+ perform public.submit_trip_netting(tr2,n);
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ua'),true);
+ perform public.trip_transfer_action(tr2,'reverse_sent');
+ denied:=false;begin perform public.trip_transfer_action(tr2,'confirm');exception when others then if SQLERRM='INVALID_TRANSFER_ACTION' then denied:=true;else raise;end if;end;
+ if not denied then raise exception 'FAIL reverse self-confirm';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.uc'),true);
+ d:=public.trip_transfer_action(tr2,'confirm');
+ if exists(select 1 from jsonb_array_elements(d->'live'->'people') x where (x->>'net')::bigint<>0) then raise exception 'FAIL final settlement balance';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('qa.ua'),true);
+ d:=public.reopen_trip_accounts('QA corrected expense');
+ d:=public.close_trip_accounts(true);
+ if exists(select 1 from jsonb_array_elements(d->'transfers') x where x->>'status'<>'confirmed') then raise exception 'FAIL reopen double settlement';end if;
+ -- Planning remains editable after closure and enforces identity.
+ insert into public.trip_next_plans(trip_id,name,quantity,unit,buy_from,note,created_by_member_id,updated_by_member_id) values(current_setting('qa.trip')::uuid,'QA forgotten',2,'kg','ras_sudr','Easier locally',current_setting('qa.a')::uuid,current_setting('qa.a')::uuid);
+ if not exists(select 1 from public.trip_next_plans where trip_id=current_setting('qa.trip')::uuid) then raise exception 'FAIL next trip';end if;
+end $$;
+rollback;
+select 'PASS: arithmetic, privacy, roles, lock, netting, reverse payment, reopen, planning; all fixtures rolled back' as test_result;

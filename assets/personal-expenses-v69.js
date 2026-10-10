@@ -2,7 +2,7 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
 
 (()=>{
   const $=s=>document.querySelector(s);
-  let me=null,trip=null,members=[],sharedExpenses=[],personalExpenses=[],comments=[];
+  let me=null,trip=null,members=[],sharedExpenses=[],personalExpenses=[],comments=[],closeout=null,nettings=[],offsetStates=[];
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -31,6 +31,7 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
       TripDB.list("personal_expense_comments",{order:"created_at",asc:true})
     ]);
     [members,sharedExpenses,personalExpenses,comments]=result;
+    [closeout,nettings,offsetStates]=await Promise.all([TripDB.rpc('trip_closeout_dashboard'),TripDB.rpc('my_trip_netting'),TripDB.rpc('my_personal_offset_states')]);
   }
 
   function buildTransfers(people){
@@ -53,26 +54,23 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
   }
 
   function sharedSettlement(){
-    const total=sharedExpenses.reduce((s,x)=>s+Number(x.amount||0),0);
-    const confirmed=members.filter(m=>m.confirmed!==false);
-    const share=confirmed.length?total/confirmed.length:0;
-    const paid={};
-    members.forEach(m=>paid[m.id]=0);
-    sharedExpenses.forEach(x=>paid[x.payer_member_id]=(paid[x.payer_member_id]||0)+Number(x.amount||0));
-    const people=members.map(m=>{
-      const amount=paid[m.id]||0;
-      const included=m.confirmed!==false;
-      return {id:m.id,name:m.name,paid:amount,share:included?share:0,net:amount-(included?share:0),included};
-    }).filter(p=>p.included||p.paid>0);
-    const transfers=buildTransfers(people);
+    let transfers;
+    if(closeout.status==='closed'){
+      transfers=closeout.transfers.filter(t=>t.round_no===closeout.round&&t.status!=='confirmed').map(t=>{
+        const n=nettings.find(x=>x.transfer_id===t.id);const amount=n?Number(n.net)/100:Number(t.amount);
+        return {from:{id:amount>=0?t.from_member_id:t.to_member_id},to:{id:amount>=0?t.to_member_id:t.from_member_id},amount:Math.abs(amount),label:n?.items.length?'الرحلة بعد المقاصة الشخصية — التفاصيل في ختام الرحلة':'مصاريف الرحلة'};
+      });
+    }else transfers=buildTransfers(closeout.live.people.map(p=>({...p,net:p.net/100})));
     return {
-      pay:transfers.filter(x=>x.from.id===me.id).map(x=>({counterpartId:x.to.id,counterpartName:x.to.name,amount:x.amount,label:"مصاريف الرحلة",kind:"trip"})),
-      receive:transfers.filter(x=>x.to.id===me.id).map(x=>({counterpartId:x.from.id,counterpartName:x.from.name,amount:x.amount,label:"مصاريف الرحلة",kind:"trip"}))
+      pay:transfers.filter(x=>x.from.id===me.id&&x.amount>0).map(x=>({counterpartId:x.to.id,counterpartName:memberName(x.to.id),amount:x.amount,label:x.label||'مصاريف الرحلة — مبدئي',kind:'trip'})),
+      receive:transfers.filter(x=>x.to.id===me.id&&x.amount>0).map(x=>({counterpartId:x.from.id,counterpartName:memberName(x.from.id),amount:x.amount,label:x.label||'مصاريف الرحلة — مبدئي',kind:'trip'}))
     };
   }
 
   function personalSettlement(){
-    const active=personalExpenses.filter(x=>x.status==="active");
+    const covered=new Set(offsetStates.map(s=>s.expense_id));
+    if(closeout.status==='closed')nettings.forEach(n=>n.items.forEach(i=>covered.add(i.id)));
+    const active=personalExpenses.filter(x=>x.status==="active"&&!covered.has(x.id));
     return {
       pay:active.filter(x=>x.beneficiary_member_id===me.id).map(x=>({counterpartId:x.payer_member_id,counterpartName:memberName(x.payer_member_id),amount:Number(x.amount||0),label:x.description,kind:"personal",expenseId:x.id})),
       receive:active.filter(x=>x.payer_member_id===me.id).map(x=>({counterpartId:x.beneficiary_member_id,counterpartName:memberName(x.beneficiary_member_id),amount:Number(x.amount||0),label:x.description,kind:"personal",expenseId:x.id}))
@@ -115,12 +113,15 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
   function renderSettlement(){
     const shared=sharedSettlement();
     const personal=personalSettlement();
-    const payGroups=groupFlows(shared.pay,personal.pay);
-    const receiveGroups=groupFlows(shared.receive,personal.receive);
+    const allPay=groupFlows(shared.pay,personal.pay),allReceive=groupFlows(shared.receive,personal.receive);
+    const ids=new Set([...allPay,...allReceive].map(x=>x.counterpartId));const payGroups=[],receiveGroups=[];
+    ids.forEach(id=>{const p=allPay.find(x=>x.counterpartId===id),r=allReceive.find(x=>x.counterpartId===id),net=Math.round(((p?.total||0)-(r?.total||0))*100)/100;
+      if(net===0)return;const group={counterpartId:id,counterpartName:memberName(id),total:Math.abs(net),items:net>0?[...(p?.items||[]),...(r?.items||[]).map(i=>({...i,amount:-i.amount,label:'خصم: '+i.label}))]:[...(r?.items||[]),...(p?.items||[]).map(i=>({...i,amount:-i.amount,label:'خصم: '+i.label}))]};(net>0?payGroups:receiveGroups).push(group);
+    });
     const tripPay=shared.pay.reduce((s,x)=>s+x.amount,0);
     const personalPay=personal.pay.reduce((s,x)=>s+x.amount,0);
-    const totalPay=tripPay+personalPay;
-    const totalReceive=shared.receive.concat(personal.receive).reduce((s,x)=>s+x.amount,0);
+    const totalPay=payGroups.reduce((s,x)=>s+x.total,0);
+    const totalReceive=receiveGroups.reduce((s,x)=>s+x.total,0);
     if($("#peTripDue")) $("#peTripDue").textContent=money(tripPay);
     if($("#pePersonalDue")) $("#pePersonalDue").textContent=money(personalPay);
     if($("#peTotalDue")) $("#peTotalDue").textContent=money(totalPay);
@@ -138,6 +139,8 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
   function txComments(expenseId){return comments.filter(c=>c.expense_id===expenseId)}
 
   function transactionCard(x){
+    const offset=offsetStates.find(o=>o.expense_id===x.id);
+    if(offset)return `<article class="pe-transaction"><div class="pe-tx-head"><strong>${esc(x.description)}</strong><strong>${money(x.amount)}</strong></div><p>${offset.status==='settled'?'✅ اتسوّت بالمقاصة ومش مطلوبة تاني':'⏳ داخلة في مقاصة منتظرة تأكيد الطرف التاني'}</p><a href="closeout.html">راجع التفاصيل في ختام الرحلة</a></article>`;
     const mine=x.payer_member_id===me.id;
     const otherId=mine?x.beneficiary_member_id:x.payer_member_id;
     const other=memberName(otherId);
@@ -262,7 +265,8 @@ window.__KENZ_PERSONAL_EXPENSES_V69__=true;
       }catch(e){
         console.error(e);
         const msg=String(e?.message||e||"");
-        if(msg.includes("BENEFICIARY_CANNOT_EDIT_AMOUNT")) say("التعديل متاح للي دفع بس");
+        if(msg.includes("PERSONAL_EXPENSE_IN_SETTLEMENT")) say("المبلغ داخل تسوية. راجع ختام الرحلة الأول");
+        else if(msg.includes("BENEFICIARY_CANNOT_EDIT_AMOUNT")) say("التعديل متاح للي دفع بس");
         else say("حصلت مشكلة — جرّب تاني");
         btn.disabled=false;
       }

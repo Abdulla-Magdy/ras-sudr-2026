@@ -108,7 +108,7 @@ window.TripDB = (() => {
     let sel=opts.select||"*";
     if(table==="members" && sel==="*") sel="id,trip_id,name,role,joke,confirmed,sort_order,access_role";
     let q=client.from(table).select(sel);
-    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items"].includes(table)) q=q.eq("trip_id",trip.id);
+    if(opts.trip!==false && trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items","trip_next_plans"].includes(table)) q=q.eq("trip_id",trip.id);
     if(opts.order) q=q.order(opts.order,{ascending:opts.asc!==false});
     const {data,error}=await q;
     if(error) throw error;
@@ -117,7 +117,7 @@ window.TripDB = (() => {
 
   async function insert(table,row){
     if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
-    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items"].includes(table) && !row.trip_id) row.trip_id=trip.id;
+    if(trip?.id && ["members","categories","meal_plan","shopping_items","expenses","ideas","private_packing_items","trip_next_plans"].includes(table) && !row.trip_id) row.trip_id=trip.id;
     const {data,error}=await client.from(table).insert(row).select().single();
     if(error) throw error;
     return data;
@@ -241,6 +241,16 @@ window.TripDB = (() => {
     return data||{total:0,by_member:[]};
   }
 
+  async function rpc(name,args={}){
+    if(!member) throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.rpc(name,args);if(error)throw error;return data;
+  }
+  async function updateNextPlan(id,row,version){
+    if(!member)throw new Error("MEMBER_LOGIN_REQUIRED");
+    const {data,error}=await client.from('trip_next_plans').update(row).eq('id',id).eq('updated_at',version).select('id');
+    if(error)throw error;if(!data?.length)throw new Error('PLAN_CHANGED');return data[0];
+  }
+
   async function recentChanges(limit=12){
     if(!member) return [];
     const {data,error}=await client.from("change_log")
@@ -257,7 +267,7 @@ window.TripDB = (() => {
   }
 
   return {
-    init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminAddMember,adminSetMemberConfirmed,adminResetRequests,
+    rpc,updateNextPlan,init,loginChoices,claimOrLogin,requestPinReset,adminResetPin,adminMembers,adminAddMember,adminSetMemberConfirmed,adminResetRequests,
     forgetDevice,getMember,getTrip,isBound,isAdmin,list,insert,update,remove,responsibilities,
     upsertResponsibility,claimFoodItem,releaseFoodItem,recordPurchaseBatch,pendingPurchaseItemIds,purchaseQueueItems,leftovers,setLeftoverRemaining,claimLeftover,
     removeLeftoverAllocation,setLeftoverStatus,leftoverCharges,recentChanges,subscribe

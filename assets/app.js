@@ -629,11 +629,12 @@ async function renderExpenses(){
     renderExpenses();
   });
 
+  const closeout=DBLIVE?await TripDB.rpc("trip_closeout_dashboard"):null;
   // Core totals
   const total=arr.reduce((s,x)=>s+Number(x.amount||0),0);
   const activeMembers=confirmedMembers();
   const participantCount=activeMembers.length;
-  const share=participantCount>0 ? total/participantCount : 0;
+  const share=closeout?(closeout.live.shared/100/Math.max(1,closeout.live.participants)):(participantCount>0 ? total/participantCount : 0);
 
   $("#totalExpense").textContent=money(total);
   $("#shareExpense").textContent=money(share);
@@ -671,6 +672,8 @@ async function renderExpenses(){
     })
     .filter(p=>p.included || p.paid>0);
 
+  if(closeout)people=closeout.live.people.map(p=>({...p,paid:p.paid/100,share:(p.share+p.leftovers)/100,net:p.net/100}));
+
   if($("#settlementBody")){
     $("#settlementBody").innerHTML=people.length?people.map(p=>`
       <tr class="${p.included?"":"excluded-row"}">
@@ -697,7 +700,7 @@ async function renderExpenses(){
         </div>
         <div class="settlement-person-grid">
           <div><span>دفع</span><strong>${money(p.paid)}</strong></div>
-          <div><span>نصيبه</span><strong>${p.included?money(p.share):"0 ج"}</strong></div>
+          <div><span>نصيبه + البواقي</span><strong>${p.included?money(p.share):"0 ج"}</strong></div>
           <div class="settlement-net"><span>الصافي</span><strong class="${p.net>0?"net-credit":p.net<0?"net-debt":"net-zero"}">${p.net>=0?"+":""}${money(p.net)}</strong></div>
         </div>
       </article>`).join(""):'<div class="empty-finance">مفيش أعضاء داخل القسمة حاليًا.</div>';
@@ -720,7 +723,7 @@ async function renderExpenses(){
   }
 
   // Suggested transfers
-  const transfers=buildTransfers(people);
+  const transfers=closeout?.status==="closed"?closeout.transfers.filter(t=>t.round_no===closeout.round&&t.status!=="confirmed").map(t=>({from:{name:mn[t.from_member_id]},to:{name:mn[t.to_member_id]},amount:Number(t.amount)})):buildTransfers(people);
   const tp=$("#transferPlan");
   if(tp){
     if(!total){
@@ -740,6 +743,8 @@ async function renderExpenses(){
         </div>`).join("");
     }
   }
+
+  if(tp)tp.insertAdjacentHTML("afterbegin",'<a href="closeout.html" class="co-global">تفاصيل البواقي والمقاصة الشخصية وتأكيد التحويلات في ختام الرحلة ←</a>');
 
   // Category breakdown
   const categoryTotals={};
