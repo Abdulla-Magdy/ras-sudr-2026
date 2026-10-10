@@ -3,8 +3,9 @@
   window.__KENZ_IA__=true;
   const current=()=>location.pathname.split('/').pop()||'index.html';
   const adminPages=new Set(['admin.html','admin-expenses.html','admin-members.html','admin-games.html','admin-announcements.html']);
-  const primaryNav=[['index.html','🏠','الرئيسية'],['shopping.html','🛒','المشتريات'],['expenses.html','💰','الحسابات'],['closeout.html','🏁','الختام'],['account.html','👤','حسابي']];
-  const desktopNav=[['index.html','🏠','الرئيسية'],['shopping.html','🛒','المشتريات'],['expenses.html','💰','الحسابات'],['leftovers.html','🧺','البواقي'],['closeout.html','🏁','الختام'],['account.html','👤','حسابي']];
+  const primaryNav=[['index.html','🏠','الرئيسية'],['next-trip.html#forgotten','📝','نسينا إيه؟'],['next-trip.html#items','📦','الكميات'],['next-trip.html#sources','📍','نجيب منين؟'],['closeout.html','🏁','الختام']];
+  const desktopNav=primaryNav;
+  const active=href=>href.includes('#') ? current()===href.split('#')[0]&&(location.hash||'#forgotten')==='#'+href.split('#')[1] : current()===href;
   const group=file=>({'next-trip':'closeout',meals:'closeout',crew:'trip',transport:'trip',location:'trip',ideas:'trip',games:'trip',bag:'account',settings:'account','my-tasks':'account','personal-expenses':'account',responsibilities:'shopping',leftovers:'expenses','admin-expenses':'admin'}[file.replace('.html','')]||file.replace('.html',''));
   function apply(){
     const member=window.TripDB?.getMember?.();if(!member)return;
@@ -12,19 +13,19 @@
     if(adminPages.has(file)&&!isAdmin){location.replace('index.html');return}
     const links=document.querySelector('.topbar .links');
     if(links){
-      const html=desktopNav.map(([href,icon,label])=>`<a href="${href}" class="${(file===href||group(file)===href.slice(0,-5))?'active':''}">${icon} ${label}</a>`).join('')+(isAdmin?'<a href="admin.html" class="ia-admin-link">👑 لوحة الأدمن</a>':'');
+      const html=desktopNav.map(([href,icon,label])=>`<a href="${href}" class="${active(href)?'active':''}">${icon} ${label}</a>`).join('')+(isAdmin?'<a href="admin.html" class="ia-admin-link">👑 لوحة الأدمن</a>':'');
       if(links.innerHTML!==html)links.innerHTML=html;
     }
     const bottom=document.querySelector('#v38BottomNav');
     if(bottom){
-      const html=primaryNav.map(([href,icon,label])=>`<a href="${href}" class="${group(file)===href.slice(0,-5)?'active':''}"><span class="ico">${icon}</span><span>${label}</span></a>`).join('');
+      const html=primaryNav.map(([href,icon,label])=>`<a href="${href}" class="${active(href)?'active':''}"><span class="ico">${icon}</span><span>${label}</span></a>`).join('');
       if(bottom.innerHTML!==html)bottom.innerHTML=html;
     }
     const drawer=document.querySelector('#mobileMenuDrawer .mobile-drawer-links');
     if(drawer){
       const html=`<div class="v38-drawer-label">الصفحات الرئيسية</div>`+
         primaryNav.map(([href,icon,label])=>`<a href="${href}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></a>`).join('')+
-        `<div class="v38-drawer-label">إقفال الرحلة</div><a href="next-trip.html"><span class="nav-icon">📝</span><span class="nav-label">للرحلة الجاية</span></a><a href="trip.html"><span class="nav-icon">🧭</span><span class="nav-label">تفاصيل الرحلة</span></a><a href="leftovers.html"><span class="nav-icon">🧺</span><span class="nav-label">تصفية بواقي الرحلة</span></a>`+
+        `<div class="v38-drawer-label">حسابات وصفحات الرحلة</div><a href="expenses.html">💰 الحسابات</a><a href="shopping.html">🛒 المشتريات</a><a href="account.html">👤 حسابي</a><a href="next-trip.html"><span class="nav-icon">📝</span><span class="nav-label">للرحلة الجاية</span></a><a href="trip.html"><span class="nav-icon">🧭</span><span class="nav-label">تفاصيل الرحلة</span></a><a href="leftovers.html"><span class="nav-icon">🧺</span><span class="nav-label">تصفية بواقي الرحلة</span></a>`+
         (isAdmin?'<div class="v38-drawer-label">الإدارة</div><a href="admin-expenses.html"><span class="nav-icon">🧾</span><span class="nav-label">مراجعة المصاريف</span></a><a href="admin.html"><span class="nav-icon">👑</span><span class="nav-label">لوحة الأدمن</span></a>':'');
       if(drawer.innerHTML!==html)drawer.innerHTML=html;
     }
@@ -36,4 +37,5 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
   setInterval(apply,1000);
   window.addEventListener('pageshow',apply);
+  window.addEventListener('hashchange',apply);
 })();
