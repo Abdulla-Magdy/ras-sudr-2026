@@ -1,7 +1,7 @@
 (() => {
   if(window.__KENZ_APP_VERSION_BADGE__)return;
   window.__KENZ_APP_VERSION_BADGE__=true;
-  const V=window.KENZ_APP_VERSION||'V78';
+  const V=window.KENZ_APP_VERSION||'V79';
   const T=window.KENZ_APP_UPDATED_AT||'10/10/2026';
   const ICON='./assets/icons/humidity-v66-192.jpg?v=67';
   const style=document.createElement('style');

@@ -2,7 +2,7 @@
   const $=s=>document.querySelector(s),page=location.pathname.split('/').pop()||'index.html';
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const money=c=>new Intl.NumberFormat('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(c||0)/100)+' ج';
-  let data=null,busy=false,nettings=[];
+  let data=null,busy=false,nettings=[],personal=[],offsets=[];
   function previewTransfers(people){
     const debt=people.filter(p=>p.net<0).map(p=>({...p,left:-p.net}));
     const credit=people.filter(p=>p.net>0).map(p=>({...p,left:p.net}));
@@ -12,7 +12,25 @@
   }
   window.KenzCloseout={previewTransfers};
   const messages={NETTING_CHANGED:'الحساب الشخصي اتغير. اضغط تحديث وراجع الصافي قبل التحويل.',PENDING_EXPENSES:'فيه مصاريف معلقة لازم تتراجع الأول.',OPEN_LEFTOVERS:'لسه فيه بواقي مفتوحة للتوزيع. راجعها الأول.',NO_PARTICIPANTS:'لازم يكون فيه مشاركين مؤكدين.',UNCONFIRMED_TRANSFERS:'فيه تحويلات اتعلمت «حوّلت» ولسه المستلم ما أكدهاش. لازم يأكد الاستلام أو يختار «ما وصلنيش» الأول.',REASON_REQUIRED:'اكتب سبب واضح لإعادة الفتح.',TRIP_ACCOUNTS_CLOSED:'الحسابات مقفولة. الأدمن يقدر يعيد فتحها من ختام الرحلة.',INVALID_TRANSFER_ACTION:'حالة التحويل اتغيرت أو الإجراء مش متاح ليك. حدّث الصفحة.',ADMIN_REQUIRED:'الإجراء ده للأدمن فقط.'};
-  async function act(name,args,button){if(busy)return;busy=true;if(button)button.disabled=true;try{data=await TripDB.rpc(name,args);nettings=await TripDB.rpc('my_trip_netting');render();window.toast?.('اتحفظ ✅');}catch(e){const text=String(e.message||e);$('#coError').textContent=Object.entries(messages).find(([k])=>text.includes(k))?.[1]||'تعذر الحفظ. راجع الاتصال وحاول تاني.';}finally{busy=false;if(button)button.disabled=false;}}
+  async function act(name,args,button){if(busy)return;busy=true;if(button)button.disabled=true;try{data=await TripDB.rpc(name,args);await loadPrivate();render();window.toast?.('اتحفظ ✅');}catch(e){const text=String(e.message||e);$('#coError').textContent=Object.entries(messages).find(([k])=>text.includes(k))?.[1]||'تعذر الحفظ. راجع الاتصال وحاول تاني.';}finally{busy=false;if(button)button.disabled=false;}}
+  async function loadPrivate(){
+    nettings=await TripDB.rpc('my_trip_netting');
+    if(page==='index.html')[personal,offsets]=await Promise.all([TripDB.list('personal_expenses'),TripDB.rpc('my_personal_offset_states')]);
+  }
+  function homeBalances(me,names){
+    const covered=new Set(offsets.map(x=>x.expense_id)),groups=new Map();
+    const add=(id,cents,label)=>{if(!groups.has(id))groups.set(id,{total:0,items:[]});const g=groups.get(id);g.total+=cents;g.items.push({cents,label});};
+    flows().filter(t=>t.status!=='confirmed'&&(t.from_member_id===me||t.to_member_id===me)).forEach(t=>{
+      const n=data.status==='closed'?nettings.find(x=>x.transfer_id===t.id):null;
+      if(n)n.items.forEach(i=>covered.add(i.id));
+      add(t.from_member_id===me?t.to_member_id:t.from_member_id,(n?n.net:t.cents)*(t.from_member_id===me?-1:1),n?'الرحلة بعد المقاصة الشخصية':'مصاريف الرحلة');
+    });
+    personal.filter(x=>x.status==='active'&&!covered.has(x.id)).forEach(x=>{
+      if(x.payer_member_id===me)add(x.beneficiary_member_id,Math.round(Number(x.amount)*100),x.description);
+      else if(x.beneficiary_member_id===me)add(x.payer_member_id,-Math.round(Number(x.amount)*100),x.description);
+    });
+    return `<section class="co-card"><h2>حساباتك مع كل واحد</h2><p class="co-muted">${data.status==='closed'?'الصافي المتبقي بعد المقاصة':'صافي مبدئي بعد خصم المشتريات الشخصية؛ يتغير لحد اعتماد الحسابات'}. المبالغ المتنازع عليها مش داخلة.</p><div class="co-list">${[...groups].map(([id,g])=>`<article class="co-person"><strong>${esc(names[id]||'صاحبك')} — ${netLabel(g.total)}</strong>${g.items.map(i=>`<span>${esc(i.label)}: ${netLabel(i.cents)}</span>`).join('')}</article>`).join('')||'<p>مفيش مبالغ متبقية عليك أو ليك ✅</p>'}</div><a href="personal-expenses.html">إضافة أو تعديل مشتريات شخصية</a></section>`;
+  }
   function flows(){return data.status==='closed'?data.transfers.filter(t=>t.round_no===data.round&&t.status!=='void').map(t=>({...t,cents:Math.round(Number(t.amount)*100)})):previewTransfers(data.live.people);}
   function render(){
     if(!$('#closeoutApp'))return;
@@ -27,6 +45,7 @@
       <div class="co-grid co-kpis"><div class="co-card"><span>المصاريف المعتمدة</span><strong>${money(s.total)}</strong></div><div class="co-card"><span>بواقي أخدها أفراد</span><strong>${money(s.allocated)}</strong></div><div class="co-card"><span>المبلغ المشترك بعد البواقي</span><strong>${money(s.shared)}</strong></div><div class="co-card"><span>المشاركون في القسمة</span><strong>${s.participants}</strong></div></div>
       ${!closed?`<div class="co-grid"><a class="co-card co-link" href="${admin?'admin-expenses.html':'expenses.html'}"><strong>🧾 ${data.pending} طلب معلّق</strong><span>${admin?'راجع واعتمد المصاريف':'كمّل مصاريفك وراجع طلباتك'}</span></a><a class="co-card co-link" href="leftovers.html"><strong>🧺 ${data.open_leftovers} صنف متبقي مفتوح</strong><span>سجل اللي فاض، وحدد مين أخده</span></a></div>`:''}
       <section class="co-card"><h2>حسابك يا ${esc(me.name)}</h2>${my?`<div class="co-grid"><div><span>دفعت للرحلة</span><strong>${money(my.paid)}</strong></div><div><span>نصيبك المشترك</span><strong>${money(my.share)}</strong></div><div><span>بواقي أخدتها</span><strong>${money(my.leftovers)}</strong></div><div><span>صافي المتبقي حاليًا</span><strong>${netLabel(data.live.people.find(p=>p.id===me.id)?.net||0)}</strong></div></div>`:'<p>إنت مش داخل القسمة.</p>'}<p class="co-muted">فرق القروش في القسمة بيتوزع بالتساوي قدر الإمكان؛ الإجماليات متطابقة لآخر قرش.</p><a href="personal-expenses.html">💸 حساباتك الشخصية بينك وبين أصحابك</a></section>
+      ${page==='index.html'?homeBalances(me.id,names):''}
       <section class="co-card"><h2>${closed?'تحويلاتك':'اقتراح تحويلاتك — مبدئي'}</h2><div class="co-list">${mine.length?mine.map(t=>transferCard(t,names,me.id)).join(''):'<p>مفيش تحويلات مطلوبة منك أو ليك في الجولة الحالية.</p>'}</div></section>
       <details class="co-card"><summary>كشف حساب المجموعة (${people.length})</summary><div class="co-list">${people.map(p=>`<article class="co-person"><strong>${esc(p.name)} ${p.included?'':'• خارج القسمة'}</strong><span>دفع ${money(p.paid)} • نصيبه ${money(p.share)} • بواقي ${money(p.leftovers)}</span><span>${netLabel(data.live.people.find(x=>x.id===p.id)?.net||0)}</span></article>`).join('')}</div></details>
       <details class="co-card"><summary>كل تحويلات الرحلة</summary><div class="co-list">${transfers.map(t=>transferCard(t,names,null)).join('')||'<p>الحسابات متساوية.</p>'}</div></details>
@@ -60,16 +79,16 @@
     }
     return `<article class="co-transfer"><div><strong>${esc(names[t.from_member_id])} مستحق عليه لـ ${esc(names[t.to_member_id])}</strong><span>${labels[t.status]}</span></div><b>${money(t.cents)}</b>${detail}${controls}</article>`;
   }
-  async function load(){if(busy)return;try{[data,nettings]=await Promise.all([TripDB.rpc('trip_closeout_dashboard'),TripDB.rpc('my_trip_netting')]);render();decorate();}catch(e){const error=$('#coError');if(error)error.textContent='تعذر تحميل الحسابات. اتأكد من الإنترنت واضغط تحديث.';}}
+  async function load(){if(busy)return;try{data=await TripDB.rpc('trip_closeout_dashboard');await loadPrivate();render();decorate();}catch(e){const error=$('#coError');if(error)error.textContent='تعذر تحميل الحسابات. اتأكد من الإنترنت واضغط تحديث.';}}
   function decorate(){
     if(!data)return;
     const closed=data.status==='closed';
     document.body.classList.toggle('co-finance-closed',closed);
     const host=$('#appMain');
-    if(host&&page!=='closeout.html'&&!$('#coGlobalLink')){const a=document.createElement('a');a.id='coGlobalLink';a.className='co-global';a.href='closeout.html';host.prepend(a);}
+    if(host&&page!=='closeout.html'&&page!=='index.html'&&!$('#coGlobalLink')){const a=document.createElement('a');a.id='coGlobalLink';a.className='co-global';a.href='closeout.html';host.prepend(a);}
     if($('#coGlobalLink'))$('#coGlobalLink').textContent=closed?'🔒 الحسابات معتمدة — تابع التحويلات من ختام الرحلة':'🏁 ختام الرحلة — راجع حسابك والبواقي والتصفية';
   }
-  async function start(){for(let i=0;i<120&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,100));if(!window.TripDB?.isBound?.())return;await load();if(page==='closeout.html'){$('#coRefresh')?.addEventListener('click',load);}else setInterval(decorate,2000);}
+  async function start(){for(let i=0;i<120&&!window.TripDB?.isBound?.();i++)await new Promise(r=>setTimeout(r,100));if(!window.TripDB?.isBound?.())return;await load();if(page==='closeout.html'||page==='index.html'){$('#coRefresh')?.addEventListener('click',load);}else setInterval(decorate,2000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&window.TripDB?.isBound?.())load();});
 })();
